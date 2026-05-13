@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>HueHacker - Daily Color Memory Challenge</title>
+<meta name="description" content="HueHacker is a daily color memory game with AI-generated characters. Test your color perception with HSB sliders. Built by an indie maker with AI.">
+
+<!-- Open Graph / Twitter Card -->
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://huehacker.fun">
+<meta property="og:title" content="HueHacker - Daily Color Memory Challenge">
+<meta property="og:description" content="AI-generated characters · HSB sliders · Beat the hue. A daily color memory game built in public.">
+<meta property="og:image" content="https://huehacker.fun/og-image.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="HueHacker - Daily Color Memory Challenge">
+<meta name="twitter:description" content="AI-generated characters · HSB sliders · Beat the hue.">
+<meta name="twitter:image" content="https://huehacker.fun/og-image.jpg">
+
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="app">
+  <header>
+    <h1>🎨 HueHacker</h1>
+    <p class="subtitle">Daily Color Memory Challenge</p>
+    <div class="meta">
+      <span id="day-label">Day 1</span>
+      <span id="streak">🔥 0</span>
+    </div>
+  </header>
+
+  <main>
+    <!-- Character Stage -->
+    <section class="stage">
+      <div class="character-wrap">
+        <img id="character-img" src="" alt="character" />
+        <div id="target-overlay" class="overlay"></div>
+      </div>
+      <div class="hint">Match the character's color from memory</div>
+    </section>
+
+    <!-- HSB Controls -->
+    <section class="controls">
+      <div class="slider-group">
+        <label>Hue <span id="h-val">180</span>°</label>
+        <input type="range" id="hue" min="0" max="360" value="180">
+        <div class="track hue-track"></div>
+      </div>
+      <div class="slider-group">
+        <label>Saturation <span id="s-val">50</span>%</label>
+        <input type="range" id="sat" min="0" max="100" value="50">
+        <div class="track sat-track"></div>
+      </div>
+      <div class="slider-group">
+        <label>Brightness <span id="b-val">50</span>%</label>
+        <input type="range" id="bri" min="0" max="100" value="50">
+        <div class="track bri-track"></div>
+      </div>
+
+      <div class="preview-box">
+        <div class="color-preview" id="user-color"></div>
+        <div class="preview-label">Your Pick</div>
+      </div>
+
+      <button id="submit-btn" class="btn-primary">Submit Guess</button>
+    </section>
+
+    <!-- Result Modal -->
+    <div id="result-modal" class="modal hidden">
+      <div class="modal-content">
+        <h2 id="score-title">Score 92</h2>
+        <div class="compare">
+          <div class="compare-item">
+            <div class="dot" id="target-dot"></div>
+            <span>Target</span>
+          </div>
+          <div class="compare-item">
+            <div class="dot" id="user-dot"></div>
+            <span>Yours</span>
+          </div>
+        </div>
+        <p id="delta-e">ΔE 2.34</p>
+        <p id="comment">Amazing eye!</p>
+        <div class="actions">
+          <button id="share-btn" class="btn-primary">Download Score Card</button>
+          <button id="close-modal" class="btn-ghost">Try Again</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Leaderboard -->
+    <section class="leaderboard">
+      <h3>🏆 Leaderboard</h3>
+      <ul id="lb-list"></ul>
+    </section>
+  </main>
+
+  <footer>
+    <p>Built with AI · <a href="https://twitter.com/hueherogame" target="_blank">@hueherogame</a></p>
+    <p class="disclaimer">HueHacker is an independent project. Characters are AI-generated.</p>
+  </footer>
+
+  <canvas id="share-canvas" width="1200" height="630" style="display:none;"></canvas>
+</div>
+<script src="app.js"></script>
+</body>
+</html>
