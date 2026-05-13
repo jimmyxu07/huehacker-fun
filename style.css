@@ -30,7 +30,7 @@ h1{ margin:0; font-size:1.5rem; font-weight:700; letter-spacing:-0.02em; }
 .overlay{ position:absolute; inset:0; background:var(--preview, transparent); mix-blend-mode: overlay; transition: background .05s; pointer-events:none; }
 
 /* 灰度化状态 — 游戏开始时使用 */
-.tone-wrap.desaturated .tone-circle{ filter: grayscale(100%) contrast(110%); opacity:.45; }
+.tone-wrap.desaturated .tone-circle{ filter: grayscale(100%) contrast(120%); opacity:.65; }
 
 .howto{ margin-top:14px; }
 .howto details{ background:var(--card); border-radius:14px; padding:14px 16px; }
