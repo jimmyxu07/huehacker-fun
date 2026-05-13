@@ -50,7 +50,36 @@ function scoreFromDeltaE(de){
   return Math.round(s);
 }
 
-// ===== 5. 每日 Seed PRNG =====
+// ===== 5. 评级系统 =====
+function getRating(de){
+  if(de < 1.0) return {level:'pro', label:'🏆 Professional', labelZh:'🏆 专业级', color:'#22c55e'};
+  if(de < 2.0) return {level:'excellent', label:'✅ Excellent', labelZh:'✅ 优秀', color:'#06b6d4'};
+  if(de < 3.5) return {level:'competent', label:'⚠️ Competent', labelZh:'⚠️ 合格', color:'#eab308'};
+  if(de < 5.0) return {level:'practice', label:'🔧 Needs Practice', labelZh:'🔧 需练习', color:'#f97316'};
+  return {level:'alert', label:'❌ Color Vision Alert', labelZh:'❌ 色弱预警', color:'#ef4444'};
+}
+
+// ===== 6. ΔE 分解 =====
+function computeDeltaEBreakdown(){
+  const tgtRgb=hsbToRgb(state.targetH,state.targetS,state.targetB);
+  const tgtLab=rgbToLab(tgtRgb.r,tgtRgb.g,tgtRgb.bl);
+
+  const hueRgb=hsbToRgb(state.hue,state.targetS,state.targetB);
+  const hueLab=rgbToLab(hueRgb.r,hueRgb.g,hueRgb.bl);
+  const deHue=ciede2000(hueLab,tgtLab);
+
+  const satRgb=hsbToRgb(state.targetH,state.sat,state.targetB);
+  const satLab=rgbToLab(satRgb.r,satRgb.g,satRgb.bl);
+  const deSat=ciede2000(satLab,tgtLab);
+
+  const briRgb=hsbToRgb(state.targetH,state.targetS,state.bri);
+  const briLab=rgbToLab(briRgb.r,briRgb.g,briRgb.bl);
+  const deBri=ciede2000(briLab,tgtLab);
+
+  return {hue:deHue, sat:deSat, bri:deBri};
+}
+
+// ===== 7. 每日 Seed PRNG =====
 function mulberry32(a){
   return function(){
     let t=a+=0x6D2B79F5;
@@ -69,14 +98,14 @@ function todayRandom(){
   return rng;
 }
 
-// ===== 6. 多语言 i18n =====
+// ===== 8. 多语言 i18n =====
 const i18n={
   en:{
     title:"◐ HueHacker",
     subtitle:"Daily Color Calibration",
     howtoTitle:"◐ How it works",
-    howto1:"A <b>target tone</b> is generated daily. It is displayed in grayscale — your job is to recall its original color.",
-    howto2:"Adjust <b>Hue · Saturation · Brightness</b> until your pick matches the hidden target as closely as possible.",
+    howto1:"A <b>target tone</b> is generated daily. Study the target color on the left.",
+    howto2:"Adjust <b>Hue · Saturation · Brightness</b> until your pick on the right matches as closely as possible.",
     howto3:"Hit <b>Calibrate</b> to see your score. Lower <code>ΔE</code> = closer match. Professional colorists aim for ΔE &lt; 2.",
     hueLabel:"Hue",
     satLabel:"Saturation",
@@ -86,7 +115,7 @@ const i18n={
     targetLabel:"Target",
     yoursLabel:"Yours",
     shareBtn:"Download Score Card",
-    tryAgainBtn:"Try Again",
+    tryAgainBtn:"Close",
     leaderboardTitle:"◐ Leaderboard",
     builtWith:"Built with AI",
     disclaimer:"HueHacker is an independent micro-tool for designers. ΔE calculated with CIEDE2000.",
@@ -101,13 +130,22 @@ const i18n={
     shareTitle:"◐ HueHacker",
     shareTarget:"Target",
     shareYours:"Yours",
+    ratingPro:"🏆 Professional",
+    ratingExcellent:"✅ Excellent",
+    ratingCompetent:"⚠️ Competent",
+    ratingPractice:"🔧 Needs Practice",
+    ratingAlert:"❌ Color Vision Alert",
+    deBreakdownTitle:"ΔE Breakdown",
+    deHue:"Hue Diff",
+    deSat:"Saturation Diff",
+    deBri:"Brightness Diff",
   },
   zh:{
     title:"◐ HueHacker",
     subtitle:"每日色彩校准",
     howtoTitle:"◐ 使用说明",
-    howto1:"每天生成一个<b>目标色调</b>——以灰度显示，你需要凭记忆还原它的原始颜色。",
-    howto2:"调整<b>色相 · 饱和度 · 亮度</b>滑块，让你的选择尽可能接近隐藏的目标色。",
+    howto1:"每天生成一个<b>目标色调</b>——观察左侧的目标颜色。",
+    howto2:"调整<b>色相 · 饱和度 · 亮度</b>滑块，让你的选择尽可能接近右侧目标色。",
     howto3:"点击<b>校准</b>查看得分。<code>ΔE</code> 越低 = 越接近。专业配色师追求 ΔE &lt; 2。",
     hueLabel:"色相",
     satLabel:"饱和度",
@@ -117,7 +155,7 @@ const i18n={
     targetLabel:"目标",
     yoursLabel:"你的",
     shareBtn:"下载成绩单",
-    tryAgainBtn:"再试一次",
+    tryAgainBtn:"关闭",
     leaderboardTitle:"◐ 排行榜",
     builtWith:"用AI构建",
     disclaimer:"HueHacker 是面向设计师的独立微工具。ΔE 采用 CIEDE2000 计算。",
@@ -132,6 +170,15 @@ const i18n={
     shareTitle:"◐ HueHacker",
     shareTarget:"目标",
     shareYours:"你的",
+    ratingPro:"🏆 专业级",
+    ratingExcellent:"✅ 优秀",
+    ratingCompetent:"⚠️ 合格",
+    ratingPractice:"🔧 需练习",
+    ratingAlert:"❌ 色弱预警",
+    deBreakdownTitle:"ΔE 分解",
+    deHue:"色相差",
+    deSat:"饱和度差",
+    deBri:"亮度差",
   }
 };
 let currentLang='en';
@@ -171,7 +218,7 @@ function getBrowserLang(){
   return nav && nav.startsWith('zh')?'zh':'en';
 }
 
-// ===== 7. 状态 =====
+// ===== 9. 状态 =====
 const state={
   hue:180, sat:50, bri:50,
   targetH:0, targetS:0, targetB:0,
@@ -180,34 +227,39 @@ const state={
   todayDeltaE:null,
 };
 
-// ===== 8. DOM 引用 =====
+// ===== 10. DOM 引用 =====
 const $=id=>document.getElementById(id);
 const els={
   hue:$('hue'), sat:$('sat'), bri:$('bri'),
   hVal:$('h-val'), sVal:$('s-val'), bVal:$('b-val'),
-  preview:$('user-color'), overlay:$('target-overlay'),
-  toneDisplay:$('tone-display'), toneWrap:document.querySelector('.tone-wrap'),
+  targetBlock:$('target-block'), userBlock:$('user-block'),
+  targetHsb:$('target-hsb'), userHsb:$('user-hsb'),
+  liveDe:$('live-de'), ratingBadge:$('rating-badge'),
   submit:$('submit-btn'), modal:$('result-modal'),
-  scoreTitle:$('score-title'), targetDot:$('target-dot'), userDot:$('user-dot'),
-  deltaE:$('delta-e'), comment:$('comment'),
+  scoreTitle:$('score-title'),
+  modalTargetBlock:$('modal-target-block'), modalUserBlock:$('modal-user-block'),
+  modalDeltaE:$('modal-delta-e'), modalRating:$('modal-rating'),
+  comment:$('comment'),
   shareBtn:$('share-btn'), closeModal:$('close-modal'),
   lbList:$('lb-list'), dayLabel:$('day-label'), streak:$('streak'),
   satTrack:document.querySelector('.sat-track'),
   briTrack:document.querySelector('.bri-track'),
+  barHue:$('bar-hue'), barSat:$('bar-sat'), barBri:$('bar-bri'),
+  valHue:$('val-hue'), valSat:$('val-sat'), valBri:$('val-bri'),
 };
 
-// ===== 9. 初始化每日颜色 =====
+// ===== 11. 初始化每日颜色 =====
 function initDaily(){
   const rng=todayRandom();
   state.targetH=Math.floor(rng()*360);
   state.targetS=Math.floor(rng()*60+20);
   state.targetB=Math.floor(rng()*50+30);
 
-  // 设置抽象色块的目标颜色
+  // 设置目标色块（始终彩色）
   const tgtRgb=hsbToRgb(state.targetH,state.targetS,state.targetB);
   const tgtCss=`rgb(${tgtRgb.r},${tgtRgb.g},${tgtRgb.bl})`;
-  els.toneDisplay.style.setProperty('--tone-color', tgtCss);
-  els.toneWrap.classList.add('desaturated');
+  els.targetBlock.style.background=tgtCss;
+  els.targetHsb.textContent=`H ${state.targetH}° S ${state.targetS}% B ${state.targetB}%`;
 
   // 标题
   const t=i18n[currentLang];
@@ -241,6 +293,8 @@ function initDaily(){
     state.todayScore=data.score;
     state.todayDeltaE=data.de;
     state.hue=data.h||180; state.sat=data.s||50; state.bri=data.b||50;
+    state.submitted=true;
+    disableControls();
     showResult(false);
   }
 
@@ -248,7 +302,16 @@ function initDaily(){
   updatePreview();
 }
 
-// ===== 10. 滑块事件 =====
+function disableControls(){
+  els.hue.disabled=true;
+  els.sat.disabled=true;
+  els.bri.disabled=true;
+  els.submit.disabled=true;
+  els.submit.style.opacity='0.5';
+  els.submit.style.cursor='not-allowed';
+}
+
+// ===== 12. 滑块事件 =====
 function applySliders(){
   els.hue.value=state.hue; els.sat.value=state.sat; els.bri.value=state.bri;
   els.hVal.textContent=state.hue;
@@ -258,10 +321,30 @@ function applySliders(){
 function updatePreview(){
   const rgb=hsbToRgb(state.hue,state.sat,state.bri);
   const css=`rgb(${rgb.r},${rgb.g},${rgb.bl})`;
-  els.preview.style.background=css;
-  els.overlay.style.setProperty('--preview',css);
+  els.userBlock.style.background=css;
   document.documentElement.style.setProperty('--sat-color',css);
   document.documentElement.style.setProperty('--bri-color',css);
+  els.userHsb.textContent=`H ${state.hue}° S ${state.sat}% B ${state.bri}%`;
+
+  // 实时 ΔE 和评级（未提交时）
+  if(state.todayScore===null){
+    const tgtRgb=hsbToRgb(state.targetH,state.targetS,state.targetB);
+    const lab1=rgbToLab(rgb.r,rgb.g,rgb.bl);
+    const lab2=rgbToLab(tgtRgb.r,tgtRgb.g,tgtRgb.bl);
+    const de=ciede2000(lab1,lab2);
+    els.liveDe.textContent=`ΔE ${de.toFixed(2)}`;
+    const r=getRating(de);
+    const label=currentLang==='zh'?r.labelZh:r.label;
+    els.ratingBadge.textContent=label;
+    els.ratingBadge.className='rating-badge level-'+r.level;
+  } else {
+    // 已提交状态：显示最终结果
+    els.liveDe.textContent=`ΔE ${state.todayDeltaE.toFixed(2)}`;
+    const r=getRating(state.todayDeltaE);
+    const label=currentLang==='zh'?r.labelZh:r.label;
+    els.ratingBadge.textContent=label;
+    els.ratingBadge.className='rating-badge level-'+r.level;
+  }
 }
 ['input','change'].forEach(evt=>{
   els.hue.addEventListener(evt,e=>{state.hue=+e.target.value; els.hVal.textContent=state.hue; updatePreview();});
@@ -269,7 +352,7 @@ function updatePreview(){
   els.bri.addEventListener(evt,e=>{state.bri=+e.target.value; els.bVal.textContent=state.bri; updatePreview();});
 });
 
-// ===== 11. 提交 =====
+// ===== 13. 提交 =====
 els.submit.addEventListener('click',()=>{
   if(state.submitted && state.todayScore!==null) return;
   const userRgb=hsbToRgb(state.hue,state.sat,state.bri);
@@ -282,9 +365,6 @@ els.submit.addEventListener('click',()=>{
   state.todayScore=score;
   state.submitted=true;
 
-  // 移除灰度化，显示原色
-  els.toneWrap.classList.remove('desaturated');
-
   const d=new Date();
   const start=new Date(d.getFullYear(),0,0);
   const diff=d-start+((start.getTimezoneOffset()-d.getTimezoneOffset())*60*1000);
@@ -292,6 +372,8 @@ els.submit.addEventListener('click',()=>{
   localStorage.setItem('cm_day_'+day, JSON.stringify({score:score,de:de,h:state.hue,s:state.sat,b:state.bri}));
 
   saveLeaderboard(day,score);
+  disableControls();
+  updatePreview();
   showResult(true);
 });
 
@@ -324,12 +406,31 @@ function showResult(animate){
   els.scoreTitle.textContent=`${t.score} ${state.todayScore}`;
   const tgtRgb=hsbToRgb(state.targetH,state.targetS,state.targetB);
   const userRgb=hsbToRgb(state.hue,state.sat,state.bri);
-  els.targetDot.style.background=`rgb(${tgtRgb.r},${tgtRgb.g},${tgtRgb.bl})`;
-  els.userDot.style.background=`rgb(${userRgb.r},${userRgb.g},${userRgb.bl})`;
-  els.deltaE.textContent=`ΔE ${state.todayDeltaE.toFixed(2)}`;
+
+  els.modalTargetBlock.style.background=`rgb(${tgtRgb.r},${tgtRgb.g},${tgtRgb.bl})`;
+  els.modalUserBlock.style.background=`rgb(${userRgb.r},${userRgb.g},${userRgb.bl})`;
+
+  els.modalDeltaE.textContent=`ΔE ${state.todayDeltaE.toFixed(2)}`;
+
+  const r=getRating(state.todayDeltaE);
+  const label=currentLang==='zh'?r.labelZh:r.label;
+  els.modalRating.textContent=label;
+  els.modalRating.className='modal-rating level-'+r.level;
+
+  // ΔE 分解条形图
+  const bd=computeDeltaEBreakdown();
+  const maxBar=Math.max(bd.hue,bd.sat,bd.bri,1);
+  els.barHue.style.width=(bd.hue/maxBar*100)+'%';
+  els.barSat.style.width=(bd.sat/maxBar*100)+'%';
+  els.barBri.style.width=(bd.bri/maxBar*100)+'%';
+  els.valHue.textContent=bd.hue.toFixed(2);
+  els.valSat.textContent=bd.sat.toFixed(2);
+  els.valBri.textContent=bd.bri.toFixed(2);
+
   const sc=state.todayScore;
   const text=sc>=95?t.commentLegendary:sc>=85?t.commentAmazing:sc>=70?t.commentNotBad:sc>=50?t.commentKeepTrying:t.commentPractice;
   els.comment.textContent=text;
+
   els.modal.classList.remove('hidden');
 }
 
@@ -337,7 +438,7 @@ els.closeModal.addEventListener('click',()=>{
   els.modal.classList.add('hidden');
 });
 
-// ===== 12. Canvas 分享卡片生成 =====
+// ===== 14. Canvas 分享卡片生成 =====
 function drawShareCard(){
   const canvas=document.getElementById('share-canvas');
   const ctx=canvas.getContext('2d');
@@ -355,34 +456,41 @@ function drawShareCard(){
   ctx.fillStyle='#fff';
   ctx.font='bold 60px -apple-system, BlinkMacSystemFont, sans-serif';
   ctx.textAlign='center';
-  ctx.fillText(i18n[currentLang].shareTitle,w/2,130);
+  ctx.fillText(i18n[currentLang].shareTitle,w/2,110);
 
   ctx.fillStyle='#7c5cff';
   ctx.font='bold 180px -apple-system, BlinkMacSystemFont, sans-serif';
-  ctx.fillText(String(state.todayScore),w/2,310);
+  ctx.fillText(String(state.todayScore),w/2,290);
 
   ctx.fillStyle='rgba(255,255,255,.7)';
   ctx.font='36px -apple-system, BlinkMacSystemFont, sans-serif';
-  ctx.fillText(`ΔE ${state.todayDeltaE.toFixed(2)}`,w/2,380);
+  ctx.fillText(`ΔE ${state.todayDeltaE.toFixed(2)}`,w/2,360);
 
-  ctx.fillStyle='#00d2ff';
-  ctx.font='bold 44px -apple-system, BlinkMacSystemFont, sans-serif';
-  const sc=state.todayScore;
-  const comment=sc>=95?i18n[currentLang].commentLegendary:sc>=85?i18n[currentLang].commentAmazing:sc>=70?i18n[currentLang].commentNotBad:sc>=50?i18n[currentLang].commentKeepTrying:i18n[currentLang].commentPractice;
-  ctx.fillText(comment,w/2,460);
+  const r=getRating(state.todayDeltaE);
+  const label=currentLang==='zh'?r.labelZh:r.label;
+  ctx.fillStyle=r.color;
+  ctx.font='bold 40px -apple-system, BlinkMacSystemFont, sans-serif';
+  ctx.fillText(label,w/2,420);
 
   const u=hsbToRgb(state.hue,state.sat,state.bri);
   const tgt=hsbToRgb(state.targetH,state.targetS,state.targetB);
-  const r=50;
+  const sq=140;
+
   ctx.fillStyle=`rgb(${tgt.r},${tgt.g},${tgt.bl})`;
-  ctx.beginPath(); ctx.arc(w/2-90,560,r,0,Math.PI*2); ctx.fill();
-  ctx.fillStyle='#fff'; ctx.font='26px sans-serif'; ctx.textAlign='center';
-  ctx.fillText(i18n[currentLang].shareTarget,w/2-90,640);
+  ctx.fillRect(w/2 - sq - 40, 480, sq, sq);
+  ctx.strokeStyle='rgba(255,255,255,.15)';
+  ctx.lineWidth=2;
+  ctx.strokeRect(w/2 - sq - 40, 480, sq, sq);
 
   ctx.fillStyle=`rgb(${u.r},${u.g},${u.bl})`;
-  ctx.beginPath(); ctx.arc(w/2+90,560,r,0,Math.PI*2); ctx.fill();
+  ctx.fillRect(w/2 + 40, 480, sq, sq);
+  ctx.strokeRect(w/2 + 40, 480, sq, sq);
+
   ctx.fillStyle='#fff';
-  ctx.fillText(i18n[currentLang].shareYours,w/2+90,640);
+  ctx.font='28px -apple-system, BlinkMacSystemFont, sans-serif';
+  ctx.textAlign='center';
+  ctx.fillText(i18n[currentLang].shareTarget,w/2 - sq/2 - 40, 480 + sq + 40);
+  ctx.fillText(i18n[currentLang].shareYours,w/2 + sq/2 + 40, 480 + sq + 40);
 
   return canvas;
 }
@@ -398,7 +506,7 @@ els.shareBtn.addEventListener('click',()=>{
   });
 });
 
-// ===== 13. Boot =====
+// ===== 15. Boot =====
 initDaily();
 renderLB(JSON.parse(localStorage.getItem('cm_lb')||'[]'));
 applyLanguage(getBrowserLang());

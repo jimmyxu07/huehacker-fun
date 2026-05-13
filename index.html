@@ -17,7 +17,7 @@
 <meta name="twitter:description" content="Train your color eye daily · HSB calibration · CIEDE2000 scoring.">
 <meta name="twitter:image" content="https://huehacker.fun/og-image.jpg">
 
-<link rel="stylesheet" href="style.css?v=2">
+<link rel="stylesheet" href="style.css?v=3">
 </head>
 <body>
 <div id="app">
@@ -35,20 +35,39 @@
   </header>
 
   <main>
-    <!-- Tone Stage -->
-    <section class="stage">
-      <div class="tone-wrap">
-        <div id="tone-display" class="tone-circle"></div>
-        <div id="target-overlay" class="overlay"></div>
+    <!-- Dual Stage -->
+    <section class="dual-stage">
+      <div class="color-panel target-panel">
+        <div class="panel-label" data-i18n="targetLabel">TARGET</div>
+        <div class="color-block" id="target-block"></div>
+        <div class="panel-meta" id="target-hsb">H 168° S 45% B 62%</div>
       </div>
-      <div class="howto">
-        <details>
-          <summary data-i18n="howtoTitle">◐ How it works</summary>
-          <p data-i18n="howto1">A <b>target tone</b> is generated daily. It is displayed in grayscale — your job is to recall its original color.</p>
-          <p data-i18n="howto2">Adjust <b>Hue · Saturation · Brightness</b> until your pick matches the hidden target as closely as possible.</p>
-          <p data-i18n="howto3">Hit <b>Calibrate</b> to see your score. Lower <code>ΔE</code> = closer match. Professional colorists aim for ΔE &lt; 2.</p>
-        </details>
+
+      <div class="vs-divider">
+        <span class="vs-text">VS</span>
+        <div class="live-de" id="live-de">ΔE --</div>
       </div>
+
+      <div class="color-panel user-panel">
+        <div class="panel-label" data-i18n="yoursLabel">YOURS</div>
+        <div class="color-block" id="user-block"></div>
+        <div class="panel-meta" id="user-hsb">H 180° S 50% B 50%</div>
+      </div>
+    </section>
+
+    <!-- Rating Badge -->
+    <div class="rating-badge-wrap">
+      <div class="rating-badge" id="rating-badge">--</div>
+    </div>
+
+    <!-- How it works -->
+    <section class="howto">
+      <details>
+        <summary data-i18n="howtoTitle">◐ How it works</summary>
+        <p data-i18n="howto1">A <b>target tone</b> is generated daily. Study the target color on the left.</p>
+        <p data-i18n="howto2">Adjust <b>Hue · Saturation · Brightness</b> until your pick on the right matches as closely as possible.</p>
+        <p data-i18n="howto3">Hit <b>Calibrate</b> to see your score. Lower <code>ΔE</code> = closer match. Professional colorists aim for ΔE &lt; 2.</p>
+      </details>
     </section>
 
     <!-- HSB Controls -->
@@ -69,11 +88,6 @@
         <div class="track bri-track"></div>
       </div>
 
-      <div class="preview-box">
-        <div class="color-preview" id="user-color"></div>
-        <div class="preview-label" data-i18n="yourPick">Your Pick</div>
-      </div>
-
       <button id="submit-btn" class="btn-primary" data-i18n="submitBtn">Calibrate</button>
     </section>
 
@@ -81,21 +95,53 @@
     <div id="result-modal" class="modal hidden">
       <div class="modal-content">
         <h2 id="score-title">Score 92</h2>
-        <div class="compare">
-          <div class="compare-item">
-            <div class="dot" id="target-dot"></div>
+
+        <div class="modal-compare">
+          <div class="modal-panel">
+            <div class="modal-block" id="modal-target-block"></div>
             <span data-i18n="targetLabel">Target</span>
           </div>
-          <div class="compare-item">
-            <div class="dot" id="user-dot"></div>
+          <div class="modal-panel">
+            <div class="modal-block" id="modal-user-block"></div>
             <span data-i18n="yoursLabel">Yours</span>
           </div>
         </div>
-        <p id="delta-e">ΔE 2.34</p>
+
+        <div class="modal-meta">
+          <p id="modal-delta-e">ΔE 2.34</p>
+          <div class="modal-rating" id="modal-rating">🏆 Professional</div>
+        </div>
+
+        <div class="de-breakdown">
+          <h4 data-i18n="deBreakdownTitle">ΔE Breakdown</h4>
+          <div class="breakdown-row">
+            <span class="breakdown-label" data-i18n="deHue">Hue Diff</span>
+            <div class="breakdown-bar-wrap">
+              <div class="breakdown-bar" id="bar-hue"></div>
+            </div>
+            <span class="breakdown-val" id="val-hue">0.0</span>
+          </div>
+          <div class="breakdown-row">
+            <span class="breakdown-label" data-i18n="deSat">Saturation Diff</span>
+            <div class="breakdown-bar-wrap">
+              <div class="breakdown-bar" id="bar-sat"></div>
+            </div>
+            <span class="breakdown-val" id="val-sat">0.0</span>
+          </div>
+          <div class="breakdown-row">
+            <span class="breakdown-label" data-i18n="deBri">Brightness Diff</span>
+            <div class="breakdown-bar-wrap">
+              <div class="breakdown-bar" id="bar-bri"></div>
+            </div>
+            <span class="breakdown-val" id="val-bri">0.0</span>
+          </div>
+        </div>
+
         <p id="comment">Amazing eye!</p>
+
         <div class="actions">
           <button id="share-btn" class="btn-primary" data-i18n="shareBtn">Download Score Card</button>
-          <button id="close-modal" class="btn-ghost" data-i18n="tryAgainBtn">Try Again</button>
+          <button id="close-modal" class="btn-ghost" data-i18n="tryAgainBtn">Close</button>
         </div>
       </div>
     </div>
