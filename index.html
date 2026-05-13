@@ -3,21 +3,21 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>HueHacker - Daily Color Memory Challenge</title>
-<meta name="description" content="HueHacker is a daily color memory game with AI-generated characters. Test your color perception with HSB sliders. Built by an indie maker with AI.">
+<title>HueHacker — Daily Color Calibration</title>
+<meta name="description" content="HueHacker is a daily color perception trainer for designers. Calibrate your eye with HSB sliders and CIEDE2000 scoring. Built in public by an indie maker.">
 
 <!-- Open Graph / Twitter Card -->
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://huehacker.fun">
-<meta property="og:title" content="HueHacker - Daily Color Memory Challenge">
-<meta property="og:description" content="AI-generated characters · HSB sliders · Beat the hue. A daily color memory game built in public.">
+<meta property="og:title" content="HueHacker — Daily Color Calibration">
+<meta property="og:description" content="Train your color eye daily · HSB calibration · CIEDE2000 scoring. A designer's micro-tool built with AI.">
 <meta property="og:image" content="https://huehacker.fun/og-image.jpg">
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="HueHacker - Daily Color Memory Challenge">
-<meta name="twitter:description" content="AI-generated characters · HSB sliders · Beat the hue.">
-  <meta name="twitter:image" content="https://huehacker.fun/og-image.jpg">
+<meta name="twitter:title" content="HueHacker — Daily Color Calibration">
+<meta name="twitter:description" content="Train your color eye daily · HSB calibration · CIEDE2000 scoring.">
+<meta name="twitter:image" content="https://huehacker.fun/og-image.jpg">
 
-  <link rel="stylesheet" href="style.css">
+<link rel="stylesheet" href="style.css">
 </head>
 <body>
 <div id="app">
@@ -26,8 +26,8 @@
       <button data-lang="en" class="active">EN</button>
       <button data-lang="zh">中</button>
     </div>
-    <h1 data-i18n="title">🎮 HueHacker</h1>
-    <p class="subtitle" data-i18n="subtitle">Daily Color Memory Challenge</p>
+    <h1 data-i18n="title">◐ HueHacker</h1>
+    <p class="subtitle" data-i18n="subtitle">Daily Color Calibration</p>
     <div class="meta">
       <span id="day-label">Day 1</span>
       <span id="streak">🔥 0</span>
@@ -35,18 +35,18 @@
   </header>
 
   <main>
-    <!-- Character Stage -->
+    <!-- Tone Stage -->
     <section class="stage">
-      <div class="character-wrap">
-        <img id="character-img" src="" alt="character" />
+      <div class="tone-wrap">
+        <div id="tone-display" class="tone-circle"></div>
         <div id="target-overlay" class="overlay"></div>
       </div>
       <div class="howto">
         <details>
-          <summary data-i18n="howtoTitle">🎮 How to Play</summary>
-          <p data-i18n="howto1">Each day an <b>AI-generated character</b> appears — but their colors are hidden in grayscale.</p>
-          <p data-i18n="howto2">Use the <b>Hue · Saturation · Brightness</b> sliders to recreate what you think the original color was.</p>
-          <p data-i18n="howto3">Hit <b>Submit Guess</b> and see how close you got. Lower <code>ΔE</code> = better match.</p>
+          <summary data-i18n="howtoTitle">◐ How it works</summary>
+          <p data-i18n="howto1">A <b>target tone</b> is generated daily. It is displayed in grayscale — your job is to recall its original color.</p>
+          <p data-i18n="howto2">Adjust <b>Hue · Saturation · Brightness</b> until your pick matches the hidden target as closely as possible.</p>
+          <p data-i18n="howto3">Hit <b>Calibrate</b> to see your score. Lower <code>ΔE</code> = closer match. Professional colorists aim for ΔE &lt; 2.</p>
         </details>
       </div>
     </section>
@@ -74,7 +74,7 @@
         <div class="preview-label" data-i18n="yourPick">Your Pick</div>
       </div>
 
-      <button id="submit-btn" class="btn-primary" data-i18n="submitBtn">Submit Guess</button>
+      <button id="submit-btn" class="btn-primary" data-i18n="submitBtn">Calibrate</button>
     </section>
 
     <!-- Result Modal -->
@@ -102,14 +102,14 @@
 
     <!-- Leaderboard -->
     <section class="leaderboard">
-      <h3 data-i18n="leaderboardTitle">🏆 Leaderboard</h3>
+      <h3 data-i18n="leaderboardTitle">◐ Leaderboard</h3>
       <ul id="lb-list"></ul>
     </section>
   </main>
 
   <footer>
     <p><span data-i18n="builtWith">Built with AI</span> · <a href="https://twitter.com/hueherogame" target="_blank">@hueherogame</a></p>
-    <p class="disclaimer" data-i18n="disclaimer">HueHacker is an independent project. Characters are AI-generated.</p>
+    <p class="disclaimer" data-i18n="disclaimer">HueHacker is an independent micro-tool for designers. ΔE calculated with CIEDE2000.</p>
   </footer>
 
   <canvas id="share-canvas" width="1200" height="630" style="display:none;"></canvas>
