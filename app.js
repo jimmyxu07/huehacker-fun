@@ -74,7 +74,115 @@ function todayRandom(){
   return rng;
 }
 
-// ===== 6. 数据 =====
+// ===== 7. 多语言 i18n =====
+const i18n={
+  en:{
+    title:"🎮 HueHacker",
+    subtitle:"Daily Color Memory Challenge",
+    howtoTitle:"🎮 How to Play",
+    howto1:"Each day an <b>AI-generated character</b> appears — but their colors are hidden in grayscale.",
+    howto2:"Use the <b>Hue · Saturation · Brightness</b> sliders to recreate what you think the original color was.",
+    howto3:"Hit <b>Submit Guess</b> and see how close you got. Lower <code>ΔE</code> = better match.",
+    hueLabel:"Hue",
+    satLabel:"Saturation",
+    briLabel:"Brightness",
+    yourPick:"Your Pick",
+    submitBtn:"Submit Guess",
+    targetLabel:"Target",
+    yoursLabel:"Yours",
+    shareBtn:"Download Score Card",
+    tryAgainBtn:"Try Again",
+    leaderboardTitle:"🏆 Leaderboard",
+    builtWith:"Built with AI",
+    disclaimer:"HueHacker is an independent project. Characters are AI-generated.",
+    todayBest:"Today's Best",
+    noRecords:"No records yet",
+    score:"Score",
+    commentLegendary:"🔥 Legendary eye!",
+    commentAmazing:"🎯 Amazing!",
+    commentNotBad:"🌟 Not bad",
+    commentKeepTrying:"🎭 Keep trying",
+    commentPractice:"💜 Practice more",
+    shareTitle:"🎨 HueHacker",
+    shareTarget:"Target",
+    shareYours:"Yours",
+  },
+  zh:{
+    title:"🎮 HueHacker",
+    subtitle:"每日色彩记忆挑战",
+    howtoTitle:"🎮 游戏说明",
+    howto1:"每天出现一个<b>AI生成的角色</b>——但他们的颜色被隐藏在灰度中。",
+    howto2:"用<b>色相 · 饱和度 · 亮度</b>滑块，还原你认为的原始颜色。",
+    howto3:"点击<b>提交猜测</b>，看看匹配度如何。<code>ΔE</code> 越低 = 越准确。",
+    hueLabel:"色相",
+    satLabel:"饱和度",
+    briLabel:"亮度",
+    yourPick:"你的选择",
+    submitBtn:"提交猜测",
+    targetLabel:"目标",
+    yoursLabel:"你的",
+    shareBtn:"下载成绩单",
+    tryAgainBtn:"再试一次",
+    leaderboardTitle:"🏆 排行榜",
+    builtWith:"用AI构建",
+    disclaimer:"HueHacker 是独立项目。角色均为AI生成。",
+    todayBest:"今日最佳",
+    noRecords:"暂无记录",
+    score:"得分",
+    commentLegendary:"🔥 神之眼！",
+    commentAmazing:"🎯 太棒了！",
+    commentNotBad:"🌟 不错",
+    commentKeepTrying:"🎭 继续加油",
+    commentPractice:"💜 多多练习",
+    shareTitle:"🎨 HueHacker",
+    shareTarget:"目标",
+    shareYours:"你的",
+  }
+};
+let currentLang='en';
+function applyLanguage(lang){
+  currentLang=lang;
+  localStorage.setItem('hh_lang',lang);
+  const t=i18n[lang];
+  // 更新所有带 data-i18n 的元素
+  document.querySelectorAll('[data-i18n]').forEach(el=>{
+    const key=el.dataset.i18n;
+    if(t[key]){
+      // 保留原有的 HTML 标签（如 b, code）
+      const text=t[key];
+      if(text.includes('<')) el.innerHTML=text;
+      else el.textContent=text;
+    }
+  });
+  // 更新语言按钮状态
+  document.querySelectorAll('.lang-switch button').forEach(btn=>{
+    btn.classList.toggle('active', btn.dataset.lang===lang);
+  });
+  // 更新页面标题
+  const h1=document.querySelector('h1');
+  if(h1 && t.title) h1.textContent=t.title;
+  // 如果已经提交过，重新渲染评语
+  if(state.todayScore!==null){
+    const sc=state.todayScore;
+    let text;
+    if(sc>=95) text=t.commentLegendary;
+    else if(sc>=85) text=t.commentAmazing;
+    else if(sc>=70) text=t.commentNotBad;
+    else if(sc>=50) text=t.commentKeepTrying;
+    else text=t.commentPractice;
+    els.comment.textContent=text;
+  }
+  // 重新渲染排行榜
+  renderLB(JSON.parse(localStorage.getItem('cm_lb')||'[]'));
+}
+function getBrowserLang(){
+  const saved=localStorage.getItem('hh_lang');
+  if(saved) return saved;
+  const nav=navigator.language||navigator.userLanguage;
+  return nav && nav.startsWith('zh')?'zh':'en';
+}
+
+// ===== 8. 数据 =====
 const CHARACTERS=[
   {name:"Cyan Surfer", img:"assets/ch1.jpg"},
   {name:"Magenta Mage", img:"assets/ch2.jpg"},
@@ -221,28 +329,30 @@ function saveLeaderboard(day,score){
   renderLB(lb);
 }
 function renderLB(lb){
+  const t=i18n[currentLang];
   const today=new Date();
   const start=new Date(today.getFullYear(),0,0);
   const diff=today-start+((start.getTimezoneOffset()-today.getTimezoneOffset())*60*1000);
   const day=Math.floor(diff/(1000*60*60*24));
   const todayBest=lb.find(x=>x.day===day);
   let html='';
-  if(todayBest) html+=`<li><span class="rank">👑</span><span class="name">Today's Best</span><span class="score">${todayBest.score}</span></li>`;
+  if(todayBest) html+=`<li><span class="rank">👑</span><span class="name">${t.todayBest}</span><span class="score">${todayBest.score}</span></li>`;
   lb.slice(0,7).forEach((r,i)=>{
     html+=`<li><span class="rank">#${i+1}</span><span class="name">Day ${r.day}</span><span class="score">${r.score}</span></li>`;
   });
-  els.lbList.innerHTML=html||'<li style="color:var(--muted)">No records yet</li>';
+  els.lbList.innerHTML=html||`<li style="color:var(--muted)">${t.noRecords}</li>`;
 }
 
 function showResult(animate){
-  els.scoreTitle.textContent=`Score ${state.todayScore}`;
+  const t=i18n[currentLang];
+  els.scoreTitle.textContent=`${t.score} ${state.todayScore}`;
   const tgtRgb=hsbToRgb(state.targetH,state.targetS,state.targetB);
   const userRgb=hsbToRgb(state.hue,state.sat,state.bri);
   els.targetDot.style.background=`rgb(${tgtRgb.r},${tgtRgb.g},${tgtRgb.bl})`;
   els.userDot.style.background=`rgb(${userRgb.r},${userRgb.g},${userRgb.bl})`;
   els.deltaE.textContent=`ΔE ${state.todayDeltaE.toFixed(2)}`;
-  const c=state.todayScore;
-  const text=c>=95?"🔥 Legendary eye!":c>=85?"🎯 Amazing!":c>=70?"🌟 Not bad":c>=50?"🎭 Keep trying":"💜 Practice more";
+  const sc=state.todayScore;
+  const text=sc>=95?t.commentLegendary:sc>=85?t.commentAmazing:sc>=70?t.commentNotBad:sc>=50?t.commentKeepTrying:t.commentPractice;
   els.comment.textContent=text;
   els.modal.classList.remove('hidden');
 }
@@ -253,9 +363,9 @@ els.closeModal.addEventListener('click',()=>{
 
 // ===== 12. Canvas 分享卡片生成 =====
 function drawShareCard(){
-  const c=document.getElementById('share-canvas');
-  const ctx=c.getContext('2d');
-  const w=c.width, h=c.height;
+  const canvas=document.getElementById('share-canvas');
+  const ctx=canvas.getContext('2d');
+  const w=canvas.width, h=canvas.height;
   // 背景
   const grd=ctx.createLinearGradient(0,0,w,h);
   grd.addColorStop(0,'#1a0b2e');
@@ -272,7 +382,7 @@ function drawShareCard(){
   ctx.fillStyle='#fff';
   ctx.font='bold 64px -apple-system, BlinkMacSystemFont, sans-serif';
   ctx.textAlign='center';
-  ctx.fillText('🎨 HueHacker',w/2,130);
+  ctx.fillText(i18n[currentLang].shareTitle,w/2,130);
 
   // 分数
   ctx.fillStyle='#7c5cff';
@@ -286,25 +396,25 @@ function drawShareCard(){
   // 评语
   ctx.fillStyle='#00d2ff';
   ctx.font='bold 48px -apple-system, BlinkMacSystemFont, sans-serif';
-  const c=state.todayScore;
-  const text=c>=95?"Legendary 🔥":c>=85?"Amazing 🎯":c>=70?"Not bad 🌟":c>=50?"Keep trying 🎭":"Practice more 💜";
-  ctx.fillText(text,w/2,460);
+  const sc=state.todayScore;
+  const comment=sc>=95?i18n[currentLang].commentLegendary:sc>=85?i18n[currentLang].commentAmazing:sc>=70?i18n[currentLang].commentNotBad:sc>=50?i18n[currentLang].commentKeepTrying:i18n[currentLang].commentPractice;
+  ctx.fillText(comment,w/2,460);
 
   // 颜色对比
   const u=hsbToRgb(state.hue,state.sat,state.bri);
-  const t=hsbToRgb(state.targetH,state.targetS,state.targetB);
+  const tgt=hsbToRgb(state.targetH,state.targetS,state.targetB);
   const r=50;
-  ctx.fillStyle=`rgb(${t.r},${t.g},${t.bl})`;
+  ctx.fillStyle=`rgb(${tgt.r},${tgt.g},${tgt.bl})`;
   ctx.beginPath(); ctx.arc(w/2-90,560,r,0,Math.PI*2); ctx.fill();
   ctx.fillStyle='#fff'; ctx.font='28px sans-serif'; ctx.textAlign='center';
-  ctx.fillText('Target',w/2-90,640);
+  ctx.fillText(i18n[currentLang].shareTarget,w/2-90,640);
 
   ctx.fillStyle=`rgb(${u.r},${u.g},${u.bl})`;
   ctx.beginPath(); ctx.arc(w/2+90,560,r,0,Math.PI*2); ctx.fill();
   ctx.fillStyle='#fff';
-  ctx.fillText('Yours',w/2+90,640);
+  ctx.fillText(i18n[currentLang].shareYours,w/2+90,640);
 
-  return c;
+  return canvas;
 }
 
 els.shareBtn.addEventListener('click',()=>{
@@ -321,3 +431,9 @@ els.shareBtn.addEventListener('click',()=>{
 // ===== 13. Boot =====
 initDaily();
 renderLB(JSON.parse(localStorage.getItem('cm_lb')||'[]'));
+applyLanguage(getBrowserLang());
+
+// 语言切换事件
+document.querySelectorAll('.lang-switch button').forEach(btn=>{
+  btn.addEventListener('click',()=>applyLanguage(btn.dataset.lang));
+});

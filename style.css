@@ -11,6 +11,12 @@
 html,body{ margin:0; padding:0; background:var(--bg); color:var(--text); font-family: -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif; }
 #app{ max-width:480px; margin:0 auto; padding:16px; }
 
+/* 语言切换 */
+.lang-switch{ display:flex; justify-content:flex-end; gap:6px; margin-bottom:8px; }
+.lang-switch button{ background:transparent; border:1px solid rgba(255,255,255,.15); color:var(--muted); padding:4px 10px; border-radius:6px; font-size:.75rem; cursor:pointer; transition:all .2s; }
+.lang-switch button.active{ background:var(--accent); border-color:var(--accent); color:#fff; font-weight:600; }
+.lang-switch button:hover:not(.active){ border-color:var(--accent2); color:var(--text); }
+
 header{ text-align:center; padding:8px 0 16px; }
 h1{ margin:0; font-size:1.6rem; }
 .subtitle{ color:var(--muted); font-size:.9rem; margin:6px 0 10px; }
@@ -21,6 +27,14 @@ h1{ margin:0; font-size:1.6rem; }
 .character-wrap img{ width:100%; height:100%; object-fit:cover; opacity:.35; filter: grayscale(100%) contrast(120%); }
 .overlay{ position:absolute; inset:0; background:var(--preview, #333); mix-blend-mode: overlay; transition: background .05s; }
 .hint{ text-align:center; margin-top:8px; color:var(--muted); font-size:.85rem; }
+.howto{ margin-top:10px; }
+.howto details{ background:var(--card); border-radius:12px; padding:12px 14px; }
+.howto summary{ cursor:pointer; font-weight:600; color:var(--accent2); list-style:none; }
+.howto summary::-webkit-details-marker{ display:none; }
+.howto p{ margin:8px 0 0; color:var(--muted); font-size:.82rem; line-height:1.5; }
+.howto p:first-of-type{ margin-top:10px; }
+.howto b{ color:var(--text); }
+.howto code{ background:rgba(124,92,255,.15); padding:1px 5px; border-radius:4px; font-size:.8rem; color:var(--accent); }
 
 .controls{ background:var(--card); border-radius:var(--radius); padding:16px; }
 .slider-group{ margin-bottom:14px; position:relative; }

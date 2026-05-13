@@ -15,15 +15,19 @@
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="HueHacker - Daily Color Memory Challenge">
 <meta name="twitter:description" content="AI-generated characters · HSB sliders · Beat the hue.">
-<meta name="twitter:image" content="https://huehacker.fun/og-image.jpg">
+  <meta name="twitter:image" content="https://huehacker.fun/og-image.jpg">
 
-<link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
 <div id="app">
   <header>
-    <h1>🎨 HueHacker</h1>
-    <p class="subtitle">Daily Color Memory Challenge</p>
+    <div class="lang-switch">
+      <button data-lang="en" class="active">EN</button>
+      <button data-lang="zh">中</button>
+    </div>
+    <h1 data-i18n="title">🎮 HueHacker</h1>
+    <p class="subtitle" data-i18n="subtitle">Daily Color Memory Challenge</p>
     <div class="meta">
       <span id="day-label">Day 1</span>
       <span id="streak">🔥 0</span>
@@ -37,33 +41,40 @@
         <img id="character-img" src="" alt="character" />
         <div id="target-overlay" class="overlay"></div>
       </div>
-      <div class="hint">Match the character's color from memory</div>
+      <div class="howto">
+        <details>
+          <summary data-i18n="howtoTitle">🎮 How to Play</summary>
+          <p data-i18n="howto1">Each day an <b>AI-generated character</b> appears — but their colors are hidden in grayscale.</p>
+          <p data-i18n="howto2">Use the <b>Hue · Saturation · Brightness</b> sliders to recreate what you think the original color was.</p>
+          <p data-i18n="howto3">Hit <b>Submit Guess</b> and see how close you got. Lower <code>ΔE</code> = better match.</p>
+        </details>
+      </div>
     </section>
 
     <!-- HSB Controls -->
     <section class="controls">
       <div class="slider-group">
-        <label>Hue <span id="h-val">180</span>°</label>
+        <label><span data-i18n="hueLabel">Hue</span> <span id="h-val">180</span>°</label>
         <input type="range" id="hue" min="0" max="360" value="180">
         <div class="track hue-track"></div>
       </div>
       <div class="slider-group">
-        <label>Saturation <span id="s-val">50</span>%</label>
+        <label><span data-i18n="satLabel">Saturation</span> <span id="s-val">50</span>%</label>
         <input type="range" id="sat" min="0" max="100" value="50">
         <div class="track sat-track"></div>
       </div>
       <div class="slider-group">
-        <label>Brightness <span id="b-val">50</span>%</label>
+        <label><span data-i18n="briLabel">Brightness</span> <span id="b-val">50</span>%</label>
         <input type="range" id="bri" min="0" max="100" value="50">
         <div class="track bri-track"></div>
       </div>
 
       <div class="preview-box">
         <div class="color-preview" id="user-color"></div>
-        <div class="preview-label">Your Pick</div>
+        <div class="preview-label" data-i18n="yourPick">Your Pick</div>
       </div>
 
-      <button id="submit-btn" class="btn-primary">Submit Guess</button>
+      <button id="submit-btn" class="btn-primary" data-i18n="submitBtn">Submit Guess</button>
     </section>
 
     <!-- Result Modal -->
@@ -73,32 +84,32 @@
         <div class="compare">
           <div class="compare-item">
             <div class="dot" id="target-dot"></div>
-            <span>Target</span>
+            <span data-i18n="targetLabel">Target</span>
           </div>
           <div class="compare-item">
             <div class="dot" id="user-dot"></div>
-            <span>Yours</span>
+            <span data-i18n="yoursLabel">Yours</span>
           </div>
         </div>
         <p id="delta-e">ΔE 2.34</p>
         <p id="comment">Amazing eye!</p>
         <div class="actions">
-          <button id="share-btn" class="btn-primary">Download Score Card</button>
-          <button id="close-modal" class="btn-ghost">Try Again</button>
+          <button id="share-btn" class="btn-primary" data-i18n="shareBtn">Download Score Card</button>
+          <button id="close-modal" class="btn-ghost" data-i18n="tryAgainBtn">Try Again</button>
         </div>
       </div>
     </div>
 
     <!-- Leaderboard -->
     <section class="leaderboard">
-      <h3>🏆 Leaderboard</h3>
+      <h3 data-i18n="leaderboardTitle">🏆 Leaderboard</h3>
       <ul id="lb-list"></ul>
     </section>
   </main>
 
   <footer>
-    <p>Built with AI · <a href="https://twitter.com/hueherogame" target="_blank">@hueherogame</a></p>
-    <p class="disclaimer">HueHacker is an independent project. Characters are AI-generated.</p>
+    <p><span data-i18n="builtWith">Built with AI</span> · <a href="https://twitter.com/hueherogame" target="_blank">@hueherogame</a></p>
+    <p class="disclaimer" data-i18n="disclaimer">HueHacker is an independent project. Characters are AI-generated.</p>
   </footer>
 
   <canvas id="share-canvas" width="1200" height="630" style="display:none;"></canvas>
