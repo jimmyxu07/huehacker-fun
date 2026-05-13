@@ -208,6 +208,22 @@ function applyLanguage(lang){
     else if(sc>=50) text=t.commentKeepTrying;
     else text=t.commentPractice;
     els.comment.textContent=text;
+    // 更新评级徽章
+    const r=getRating(state.todayDeltaE);
+    const label=currentLang==='zh'?r.labelZh:r.label;
+    els.ratingBadge.textContent=label;
+    els.ratingBadge.className='rating-badge level-'+r.level;
+    // 更新模态框评级
+    if(els.modalRating){
+      els.modalRating.textContent=label;
+      els.modalRating.className='modal-rating level-'+r.level;
+    }
+    // 更新模态框分解标签
+    const bdTitles=['deBreakdownTitle','deHue','deSat','deBri'];
+    bdTitles.forEach(key=>{
+      const el=document.querySelector(`[data-i18n="${key}"]`);
+      if(el && t[key]) el.textContent=t[key];
+    });
   }
   renderLB(JSON.parse(localStorage.getItem('cm_lb')||'[]'));
 }
