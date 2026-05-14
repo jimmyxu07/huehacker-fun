@@ -17,7 +17,7 @@
 <meta name="twitter:description" content="Train your color eye daily · HSB calibration · CIEDE2000 scoring.">
 <meta name="twitter:image" content="https://huehacker.fun/og-image.jpg">
 
-<link rel="stylesheet" href="style.css?v=3">
+<link rel="stylesheet" href="style.css?v=5">
 </head>
 <body>
 <div id="app">
@@ -28,6 +28,13 @@
     </div>
     <h1 data-i18n="title">◐ HueHacker</h1>
     <p class="subtitle" data-i18n="subtitle">Daily Color Calibration</p>
+
+    <!-- Mode Switch -->
+    <div class="mode-switch" id="mode-switch">
+      <button data-mode="daily" class="active" data-i18n="modeDaily">Daily</button>
+      <button data-mode="quick" data-i18n="modeQuick">Quick Challenge</button>
+    </div>
+
     <div class="meta">
       <span id="day-label">Day 1</span>
       <span id="streak">🔥 0</span>
@@ -35,63 +42,128 @@
   </header>
 
   <main>
-    <!-- Dual Stage -->
-    <section class="dual-stage">
-      <div class="color-panel target-panel">
-        <div class="panel-label" data-i18n="targetLabel">TARGET</div>
-        <div class="color-block" id="target-block"></div>
-        <div class="panel-meta" id="target-hsb">H 168° S 45% B 62%</div>
+    <!-- ========== DAILY MODE ========== -->
+    <div id="daily-panel">
+      <section class="dual-stage">
+        <div class="color-panel target-panel">
+          <div class="panel-label" data-i18n="targetLabel">TARGET</div>
+          <div class="color-block" id="target-block"></div>
+          <div class="panel-meta" id="target-hsb">H 168° S 45% B 62%</div>
+        </div>
+
+        <div class="vs-divider">
+          <span class="vs-text">VS</span>
+          <div class="live-de" id="live-de">ΔE --</div>
+        </div>
+
+        <div class="color-panel user-panel">
+          <div class="panel-label" data-i18n="yoursLabel">YOURS</div>
+          <div class="color-block" id="user-block"></div>
+          <div class="panel-meta" id="user-hsb">H 180° S 50% B 50%</div>
+        </div>
+      </section>
+
+      <div class="rating-badge-wrap">
+        <div class="rating-badge" id="rating-badge">--</div>
       </div>
 
-      <div class="vs-divider">
-        <span class="vs-text">VS</span>
-        <div class="live-de" id="live-de">ΔE --</div>
-      </div>
+      <section class="howto">
+        <details>
+          <summary data-i18n="howtoTitle">◐ How it works</summary>
+          <p data-i18n="howto1">A <b>target tone</b> is generated daily. Study the target color on the left.</p>
+          <p data-i18n="howto2">Adjust <b>Hue · Saturation · Brightness</b> until your pick on the right matches as closely as possible.</p>
+          <p data-i18n="howto3">Hit <b>Calibrate</b> to see your score. Lower <code>ΔE</code> = closer match. Professional colorists aim for ΔE &lt; 2.</p>
+        </details>
+      </section>
 
-      <div class="color-panel user-panel">
-        <div class="panel-label" data-i18n="yoursLabel">YOURS</div>
-        <div class="color-block" id="user-block"></div>
-        <div class="panel-meta" id="user-hsb">H 180° S 50% B 50%</div>
-      </div>
-    </section>
+      <section class="controls">
+        <div class="slider-group">
+          <label><span data-i18n="hueLabel">Hue</span> <span id="h-val">180</span>°</label>
+          <input type="range" id="hue" min="0" max="360" value="180">
+          <div class="track hue-track"></div>
+        </div>
+        <div class="slider-group">
+          <label><span data-i18n="satLabel">Saturation</span> <span id="s-val">50</span>%</label>
+          <input type="range" id="sat" min="0" max="100" value="50">
+          <div class="track sat-track"></div>
+        </div>
+        <div class="slider-group">
+          <label><span data-i18n="briLabel">Brightness</span> <span id="b-val">50</span>%</label>
+          <input type="range" id="bri" min="0" max="100" value="50">
+          <div class="track bri-track"></div>
+        </div>
 
-    <!-- Rating Badge -->
-    <div class="rating-badge-wrap">
-      <div class="rating-badge" id="rating-badge">--</div>
+        <button id="submit-btn" class="btn-primary" data-i18n="submitBtn">Calibrate</button>
+      </section>
     </div>
 
-    <!-- How it works -->
-    <section class="howto">
-      <details>
-        <summary data-i18n="howtoTitle">◐ How it works</summary>
-        <p data-i18n="howto1">A <b>target tone</b> is generated daily. Study the target color on the left.</p>
-        <p data-i18n="howto2">Adjust <b>Hue · Saturation · Brightness</b> until your pick on the right matches as closely as possible.</p>
-        <p data-i18n="howto3">Hit <b>Calibrate</b> to see your score. Lower <code>ΔE</code> = closer match. Professional colorists aim for ΔE &lt; 2.</p>
-      </details>
-    </section>
-
-    <!-- HSB Controls -->
-    <section class="controls">
-      <div class="slider-group">
-        <label><span data-i18n="hueLabel">Hue</span> <span id="h-val">180</span>°</label>
-        <input type="range" id="hue" min="0" max="360" value="180">
-        <div class="track hue-track"></div>
-      </div>
-      <div class="slider-group">
-        <label><span data-i18n="satLabel">Saturation</span> <span id="s-val">50</span>%</label>
-        <input type="range" id="sat" min="0" max="100" value="50">
-        <div class="track sat-track"></div>
-      </div>
-      <div class="slider-group">
-        <label><span data-i18n="briLabel">Brightness</span> <span id="b-val">50</span>%</label>
-        <input type="range" id="bri" min="0" max="100" value="50">
-        <div class="track bri-track"></div>
+    <!-- ========== QUICK CHALLENGE MODE ========== -->
+    <div id="quick-panel" class="hidden">
+      <!-- Progress & Timer -->
+      <div class="qc-progress">
+        <div class="qc-round-info">
+          <span id="qc-round-label" data-i18n="qcRound">Round 1 / 5</span>
+          <span id="qc-timer" class="qc-timer">15.0s</span>
+        </div>
+        <div class="qc-timer-bar-wrap">
+          <div class="qc-timer-bar" id="qc-timer-bar"></div>
+        </div>
       </div>
 
-      <button id="submit-btn" class="btn-primary" data-i18n="submitBtn">Calibrate</button>
-    </section>
+      <!-- Phase: Memorize -->
+      <div id="qc-memorize-phase">
+        <div class="qc-phase-label" data-i18n="qcMemorize">Memorize the target color</div>
+        <div class="color-block qc-target-block" id="qc-target-block"></div>
+        <div class="qc-countdown" id="qc-countdown">3</div>
+      </div>
 
-    <!-- Result Modal -->
+      <!-- Phase: Select -->
+      <div id="qc-select-phase" class="hidden">
+        <div class="qc-phase-label" data-i18n="qcSelect">Pick the closest color</div>
+        <div class="qc-grid" id="qc-grid">
+          <button class="qc-cell" data-idx="0"></button>
+          <button class="qc-cell" data-idx="1"></button>
+          <button class="qc-cell" data-idx="2"></button>
+          <button class="qc-cell" data-idx="3"></button>
+        </div>
+      </div>
+
+      <!-- Phase: Feedback (Memphis style) -->
+      <div id="qc-feedback-phase" class="hidden">
+        <div class="qc-memphis-bubble" id="qc-feedback-bubble">
+          <div class="qc-feedback-score" id="qc-feedback-score">92</div>
+          <div class="qc-feedback-de" id="qc-feedback-de">ΔE 2.34</div>
+          <div class="qc-feedback-rating" id="qc-feedback-rating">🏆 Professional</div>
+        </div>
+        <div class="qc-feedback-colors">
+          <div class="qc-feedback-color">
+            <div class="qc-mini-block" id="qc-fb-target"></div>
+            <span data-i18n="targetLabel">Target</span>
+          </div>
+          <div class="qc-feedback-color">
+            <div class="qc-mini-block" id="qc-fb-pick"></div>
+            <span data-i18n="qcYourPick">Your Pick</span>
+          </div>
+        </div>
+        <button id="qc-next-btn" class="btn-primary" data-i18n="qcNext">Next →</button>
+      </div>
+
+      <!-- Start Screen -->
+      <div id="qc-start-screen">
+        <div class="qc-intro">
+          <h3 data-i18n="qcTitle">⚡ Quick Challenge</h3>
+          <p data-i18n="qcDesc">5 rounds. Memorize the color, then pick it from 4 options. Speed + accuracy matter.</p>
+          <ul class="qc-rules">
+            <li data-i18n="qcRule1">You have 3 seconds to memorize each target color</li>
+            <li data-i18n="qcRule2">15 seconds total per round to select</li>
+            <li data-i18n="qcRule3">Score based on ΔE — lower is better</li>
+          </ul>
+          <button id="qc-start-btn" class="btn-primary" data-i18n="qcStart">Start Challenge</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========== RESULT MODAL (Daily) ========== -->
     <div id="result-modal" class="modal hidden">
       <div class="modal-content">
         <h2 id="score-title">Score 92</h2>
@@ -146,8 +218,41 @@
       </div>
     </div>
 
+    <!-- ========== QUICK CHALLENGE FINAL MODAL (Memphis style) ========== -->
+    <div id="qc-result-modal" class="modal hidden">
+      <div class="modal-content memphis-card">
+        <div class="memphis-burst">
+          <h2 id="qc-final-title">Quick Challenge</h2>
+          <div class="qc-final-grade" id="qc-final-grade">S</div>
+          <div class="qc-final-score" id="qc-final-score">462 / 500</div>
+        </div>
+
+        <div class="qc-final-stats">
+          <div class="qc-stat">
+            <span class="qc-stat-label" data-i18n="qcAvgDeltaE">Avg ΔE</span>
+            <span class="qc-stat-val" id="qc-final-de">1.82</span>
+          </div>
+          <div class="qc-stat">
+            <span class="qc-stat-label" data-i18n="qcBestRound">Best Round</span>
+            <span class="qc-stat-val" id="qc-final-best">98</span>
+          </div>
+          <div class="qc-stat">
+            <span class="qc-stat-label" data-i18n="qcRank">Rank</span>
+            <span class="qc-stat-val" id="qc-final-rank">Pro</span>
+          </div>
+        </div>
+
+        <div class="qc-emoji-bar" id="qc-emoji-bar">🟢🟢🟡🟢🔴</div>
+
+        <div class="actions">
+          <button id="qc-share-btn" class="btn-primary" data-i18n="qcShare">Copy Summary</button>
+          <button id="qc-close-modal" class="btn-ghost" data-i18n="qcPlayAgain">Play Again</button>
+        </div>
+      </div>
+    </div>
+
     <!-- Leaderboard -->
-    <section class="leaderboard">
+    <section class="leaderboard" id="leaderboard-section">
       <h3 data-i18n="leaderboardTitle">◐ Leaderboard</h3>
       <ul id="lb-list"></ul>
     </section>
@@ -160,6 +265,6 @@
 
   <canvas id="share-canvas" width="1200" height="630" style="display:none;"></canvas>
 </div>
-<script src="app.js?v=4"></script>
+<script src="app.js?v=5"></script>
 </body>
 </html>

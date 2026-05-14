@@ -1,4 +1,4 @@
-/* ========== HueHacker — Daily Color Calibration ========== */
+/* ========== HueHacker — Daily Color Calibration + Quick Challenge ========== */
 
 // ===== 1. HSB → RGB =====
 function hsbToRgb(h,s,b){
@@ -57,6 +57,22 @@ function getRating(de){
   if(de < 3.5) return {level:'competent', label:'⚠️ Competent', labelZh:'⚠️ 合格', color:'#eab308'};
   if(de < 5.0) return {level:'practice', label:'🔧 Needs Practice', labelZh:'🔧 需练习', color:'#f97316'};
   return {level:'alert', label:'❌ Color Vision Alert', labelZh:'❌ 色弱预警', color:'#ef4444'};
+}
+
+function getGrade(totalScore){
+  if(totalScore >= 480) return 'S';
+  if(totalScore >= 450) return 'A';
+  if(totalScore >= 400) return 'B';
+  if(totalScore >= 300) return 'C';
+  return 'D';
+}
+
+function getRankFromAvgDe(avgDe){
+  if(avgDe < 1.5) return {label:'Pro', labelZh:'专业级'};
+  if(avgDe < 3.0) return {label:'Expert', labelZh:'高手'};
+  if(avgDe < 5.0) return {label:'Competent', labelZh:'合格'};
+  if(avgDe < 8.0) return {label:'Novice', labelZh:'新手'};
+  return {label:'Colorblind', labelZh:'色弱'};
 }
 
 // ===== 6. ΔE 分解 =====
@@ -139,6 +155,25 @@ const i18n={
     deHue:"Hue Diff",
     deSat:"Saturation Diff",
     deBri:"Brightness Diff",
+    modeDaily:"Daily",
+    modeQuick:"Quick Challenge",
+    qcRound:"Round",
+    qcMemorize:"Memorize the target color",
+    qcSelect:"Pick the closest color",
+    qcNext:"Next →",
+    qcTitle:"⚡ Quick Challenge",
+    qcDesc:"5 rounds. Memorize the color, then pick it from 4 options. Speed + accuracy matter.",
+    qcRule1:"You have 3 seconds to memorize each target color",
+    qcRule2:"15 seconds total per round to select",
+    qcRule3:"Score based on ΔE — lower is better",
+    qcStart:"Start Challenge",
+    qcYourPick:"Your Pick",
+    qcAvgDeltaE:"Avg ΔE",
+    qcBestRound:"Best Round",
+    qcRank:"Rank",
+    qcShare:"Copy Summary",
+    qcPlayAgain:"Play Again",
+    qcTimeout:"⏱ Time's up!",
   },
   zh:{
     title:"◐ HueHacker",
@@ -179,6 +214,25 @@ const i18n={
     deHue:"色相差",
     deSat:"饱和度差",
     deBri:"亮度差",
+    modeDaily:"每日挑战",
+    modeQuick:"限时挑战",
+    qcRound:"第",
+    qcMemorize:"记住目标颜色",
+    qcSelect:"选出最接近的颜色",
+    qcNext:"下一题 →",
+    qcTitle:"⚡ 限时挑战",
+    qcDesc:"共 5 轮。先记忆颜色，再从 4 个选项中选出它。速度与准确度兼顾。",
+    qcRule1:"每轮有 3 秒时间记忆目标色",
+    qcRule2:"每轮限时 15 秒作答",
+    qcRule3:"按 ΔE 计分，越低越好",
+    qcStart:"开始挑战",
+    qcYourPick:"你的选择",
+    qcAvgDeltaE:"平均 ΔE",
+    qcBestRound:"最佳回合",
+    qcRank:"评级",
+    qcShare:"复制成绩单",
+    qcPlayAgain:"再来一次",
+    qcTimeout:"⏱ 时间到！",
   }
 };
 let currentLang='en';
@@ -208,17 +262,14 @@ function applyLanguage(lang){
     else if(sc>=50) text=t.commentKeepTrying;
     else text=t.commentPractice;
     els.comment.textContent=text;
-    // 更新评级徽章
     const r=getRating(state.todayDeltaE);
     const label=currentLang==='zh'?r.labelZh:r.label;
     els.ratingBadge.textContent=label;
     els.ratingBadge.className='rating-badge level-'+r.level;
-    // 更新模态框评级
     if(els.modalRating){
       els.modalRating.textContent=label;
       els.modalRating.className='modal-rating level-'+r.level;
     }
-    // 更新模态框分解标签
     const bdTitles=['deBreakdownTitle','deHue','deSat','deBri'];
     bdTitles.forEach(key=>{
       const el=document.querySelector(`[data-i18n="${key}"]`);
@@ -226,6 +277,7 @@ function applyLanguage(lang){
     });
   }
   renderLB(JSON.parse(localStorage.getItem('cm_lb')||'[]'));
+  updateQuickUI();
 }
 function getBrowserLang(){
   const saved=localStorage.getItem('hh_lang');
@@ -241,6 +293,22 @@ const state={
   submitted:false,
   todayScore:null,
   todayDeltaE:null,
+  mode:'daily',
+};
+
+// ===== Quick Challenge State =====
+const qcState={
+  round:0,
+  phase:'idle',
+  scores:[],
+  timer:null,
+  memorizeTimer:null,
+  timeLeft:15,
+  memorizeTime:3,
+  roundTimeLimit:15,
+  target:{h:0,s:0,b:0},
+  choices:[],
+  correctIdx:0,
 };
 
 // ===== 10. DOM 引用 =====
@@ -262,6 +330,39 @@ const els={
   briTrack:document.querySelector('.bri-track'),
   barHue:$('bar-hue'), barSat:$('bar-sat'), barBri:$('bar-bri'),
   valHue:$('val-hue'), valSat:$('val-sat'), valBri:$('val-bri'),
+  // Mode
+  modeSwitch:$('mode-switch'),
+  dailyPanel:$('daily-panel'),
+  quickPanel:$('quick-panel'),
+  leaderboardSection:$('leaderboard-section'),
+  // Quick Challenge
+  qcRoundLabel:$('qc-round-label'),
+  qcTimer:$('qc-timer'),
+  qcTimerBar:$('qc-timer-bar'),
+  qcMemorizePhase:$('qc-memorize-phase'),
+  qcSelectPhase:$('qc-select-phase'),
+  qcFeedbackPhase:$('qc-feedback-phase'),
+  qcStartScreen:$('qc-start-screen'),
+  qcTargetBlock:$('qc-target-block'),
+  qcCountdown:$('qc-countdown'),
+  qcGrid:$('qc-grid'),
+  qcFeedbackScore:$('qc-feedback-score'),
+  qcFeedbackDe:$('qc-feedback-de'),
+  qcFeedbackRating:$('qc-feedback-rating'),
+  qcFeedbackBubble:$('qc-feedback-bubble'),
+  qcFbTarget:$('qc-fb-target'),
+  qcFbPick:$('qc-fb-pick'),
+  qcNextBtn:$('qc-next-btn'),
+  qcStartBtn:$('qc-start-btn'),
+  qcResultModal:$('qc-result-modal'),
+  qcFinalGrade:$('qc-final-grade'),
+  qcFinalScore:$('qc-final-score'),
+  qcFinalDe:$('qc-final-de'),
+  qcFinalBest:$('qc-final-best'),
+  qcFinalRank:$('qc-final-rank'),
+  qcEmojiBar:$('qc-emoji-bar'),
+  qcShareBtn:$('qc-share-btn'),
+  qcCloseModal:$('qc-close-modal'),
 };
 
 // ===== 11. 初始化每日颜色 =====
@@ -271,24 +372,20 @@ function initDaily(){
   state.targetS=Math.floor(rng()*60+20);
   state.targetB=Math.floor(rng()*50+30);
 
-  // 设置目标色块（始终彩色）
   const tgtRgb=hsbToRgb(state.targetH,state.targetS,state.targetB);
   const tgtCss=`rgb(${tgtRgb.r},${tgtRgb.g},${tgtRgb.bl})`;
   els.targetBlock.style.background=tgtCss;
   els.targetHsb.textContent=`H ${state.targetH}° S ${state.targetS}% B ${state.targetB}%`;
 
-  // 标题
   const t=i18n[currentLang];
   document.querySelector('h1').textContent=t.title;
 
-  // 日期标签
   const d=new Date();
   const start=new Date(d.getFullYear(),0,0);
   const diff=d-start+((start.getTimezoneOffset()-d.getTimezoneOffset())*60*1000);
   const day=Math.floor(diff/(1000*60*60*24));
   els.dayLabel.textContent=`Day ${day}`;
 
-  // 连胜
   const last=Number(localStorage.getItem('cm_lastDay')||0);
   let streak=Number(localStorage.getItem('cm_streak')||0);
   if(last && last!==day){
@@ -301,7 +398,6 @@ function initDaily(){
   }
   els.streak.textContent=`🔥 ${streak}`;
 
-  // 检查今天是否已提交
   const todayKey='cm_day_'+day;
   const saved=localStorage.getItem(todayKey);
   if(saved){
@@ -342,7 +438,6 @@ function updatePreview(){
   document.documentElement.style.setProperty('--bri-color',css);
   els.userHsb.textContent=`H ${state.hue}° S ${state.sat}% B ${state.bri}%`;
 
-  // 实时 ΔE 和评级（未提交时）
   if(state.todayScore===null){
     const tgtRgb=hsbToRgb(state.targetH,state.targetS,state.targetB);
     const lab1=rgbToLab(rgb.r,rgb.g,rgb.bl);
@@ -354,7 +449,6 @@ function updatePreview(){
     els.ratingBadge.textContent=label;
     els.ratingBadge.className='rating-badge level-'+r.level;
   } else {
-    // 已提交状态：显示最终结果
     els.liveDe.textContent=`ΔE ${state.todayDeltaE.toFixed(2)}`;
     const r=getRating(state.todayDeltaE);
     const label=currentLang==='zh'?r.labelZh:r.label;
@@ -433,7 +527,6 @@ function showResult(animate){
   els.modalRating.textContent=label;
   els.modalRating.className='modal-rating level-'+r.level;
 
-  // ΔE 分解条形图
   const bd=computeDeltaEBreakdown();
   const maxBar=Math.max(bd.hue,bd.sat,bd.bri,1);
   els.barHue.style.width=(bd.hue/maxBar*100)+'%';
@@ -522,10 +615,348 @@ els.shareBtn.addEventListener('click',()=>{
   });
 });
 
+// ============================================================
+// ===== QUICK CHALLENGE LOGIC =====
+// ============================================================
+
+function switchMode(mode){
+  state.mode=mode;
+  document.querySelectorAll('.mode-switch button').forEach(btn=>{
+    btn.classList.toggle('active', btn.dataset.mode===mode);
+  });
+  if(mode==='daily'){
+    els.dailyPanel.classList.remove('hidden');
+    els.quickPanel.classList.add('hidden');
+    els.leaderboardSection.classList.remove('hidden');
+  }else{
+    els.dailyPanel.classList.add('hidden');
+    els.quickPanel.classList.remove('hidden');
+    els.leaderboardSection.classList.add('hidden');
+    resetQuickChallenge();
+  }
+}
+
+els.modeSwitch.querySelectorAll('button').forEach(btn=>{
+  btn.addEventListener('click',()=>switchMode(btn.dataset.mode));
+});
+
+function resetQuickChallenge(){
+  clearInterval(qcState.timer);
+  clearInterval(qcState.memorizeTimer);
+  qcState.round=0;
+  qcState.phase='idle';
+  qcState.scores=[];
+  qcState.timeLeft=qcState.roundTimeLimit;
+
+  els.qcStartScreen.classList.remove('hidden');
+  els.qcMemorizePhase.classList.add('hidden');
+  els.qcSelectPhase.classList.add('hidden');
+  els.qcFeedbackPhase.classList.add('hidden');
+  els.qcResultModal.classList.add('hidden');
+  updateQuickUI();
+}
+
+function updateQuickUI(){
+  const t=i18n[currentLang];
+  const displayRound=Math.min(qcState.round+1,5);
+  const roundText = currentLang==='zh' ? `${t.qcRound} ${displayRound} / 5` : `Round ${displayRound} / 5`;
+  els.qcRoundLabel.textContent=roundText;
+}
+
+// Random generator independent of daily seed
+function qcRandom(){
+  return mulberry32(Date.now() + Math.random()*1000000);
+}
+
+function generateTargetColor(){
+  const rng=qcRandom();
+  return {
+    h:Math.floor(rng()*360),
+    s:Math.floor(rng()*55+25),
+    b:Math.floor(rng()*45+30),
+  };
+}
+
+function hsbToCss({h,s,b}){
+  const rgb=hsbToRgb(h,s,b);
+  return `rgb(${rgb.r},${rgb.g},${rgb.bl})`;
+}
+
+function labFromHsb({h,s,b}){
+  const rgb=hsbToRgb(h,s,b);
+  return rgbToLab(rgb.r,rgb.g,rgb.bl);
+}
+
+function generateDistractors(target){
+  const rng=qcRandom();
+  const distractors=[];
+  const targetLab=labFromHsb(target);
+  let attempts=0;
+
+  while(distractors.length<3 && attempts<500){
+    attempts++;
+    // Vary H by 30-110°, S by 12-45%, B by 12-45%
+    const hShift = (rng()>0.5?1:-1) * (30 + rng()*80);
+    const sShift = (rng()>0.5?1:-1) * (12 + rng()*33);
+    const bShift = (rng()>0.5?1:-1) * (12 + rng()*33);
+
+    let h = (target.h + hShift + 360) % 360;
+    let s = Math.max(10, Math.min(100, target.s + sShift));
+    let b = Math.max(15, Math.min(95, target.b + bShift));
+
+    const cand={h,s,b};
+    const candLab=labFromHsb(cand);
+    const de=ciede2000(candLab,targetLab);
+
+    // Ensure distractor is not too close (de>4) and not too far (de<25)
+    if(de>4 && de<25){
+      // Also ensure it's distinct from existing distractors
+      let tooClose=false;
+      for(const d of distractors){
+        const dLab=labFromHsb(d);
+        if(ciede2000(candLab,dLab)<5) tooClose=true;
+      }
+      if(!tooClose) distractors.push(cand);
+    }
+  }
+
+  // Fallback: if we couldn't generate enough, use hue wheel distribution
+  while(distractors.length<3){
+    const idx=distractors.length;
+    const h = (target.h + 90*(idx+1)) % 360;
+    const s = Math.max(15, Math.min(95, target.s + (rng()>0.5?20:-20)));
+    const b = Math.max(20, Math.min(90, target.b + (rng()>0.5?20:-20)));
+    distractors.push({h,s,b});
+  }
+
+  return distractors;
+}
+
+function shuffleArray(arr){
+  const a=[...arr];
+  for(let i=a.length-1;i>0;i--){
+    const j=Math.floor(Math.random()*(i+1));
+    [a[i],a[j]]=[a[j],a[i]];
+  }
+  return a;
+}
+
+function startQuickRound(){
+  qcState.phase='memorize';
+  qcState.target=generateTargetColor();
+  qcState.choices=[];
+  qcState.correctIdx=0;
+
+  // Generate distractors and build choices
+  const distractors=generateDistractors(qcState.target);
+  const all=[qcState.target,...distractors];
+  const shuffled=shuffleArray(all);
+  qcState.choices=shuffled;
+  qcState.correctIdx=shuffled.findIndex(c=>c===qcState.target);
+
+  // UI: show memorize phase
+  els.qcStartScreen.classList.add('hidden');
+  els.qcFeedbackPhase.classList.add('hidden');
+  els.qcSelectPhase.classList.add('hidden');
+  els.qcMemorizePhase.classList.remove('hidden');
+
+  els.qcTargetBlock.style.background=hsbToCss(qcState.target);
+
+  updateQuickUI();
+
+  // Countdown 3..2..1
+  let count=qcState.memorizeTime;
+  els.qcCountdown.textContent=count;
+  clearInterval(qcState.memorizeTimer);
+  qcState.memorizeTimer=setInterval(()=>{
+    count--;
+    if(count>0){
+      els.qcCountdown.textContent=count;
+    }else{
+      clearInterval(qcState.memorizeTimer);
+      enterSelectPhase();
+    }
+  },1000);
+}
+
+function enterSelectPhase(){
+  qcState.phase='select';
+  qcState.timeLeft=qcState.roundTimeLimit;
+
+  els.qcMemorizePhase.classList.add('hidden');
+  els.qcSelectPhase.classList.remove('hidden');
+
+  // Render grid cells
+  const cells=els.qcGrid.querySelectorAll('.qc-cell');
+  cells.forEach((cell,idx)=>{
+    cell.style.background=hsbToCss(qcState.choices[idx]);
+    cell.classList.remove('correct','wrong');
+    cell.disabled=false;
+    cell.onclick=()=>handleQcPick(idx);
+  });
+
+  updateTimerDisplay();
+  clearInterval(qcState.timer);
+  qcState.timer=setInterval(()=>{
+    qcState.timeLeft-=0.1;
+    if(qcState.timeLeft<=0){
+      qcState.timeLeft=0;
+      clearInterval(qcState.timer);
+      handleQcTimeout();
+    }
+    updateTimerDisplay();
+  },100);
+}
+
+function updateTimerDisplay(){
+  const pct=(qcState.timeLeft/qcState.roundTimeLimit)*100;
+  els.qcTimerBar.style.width=pct+'%';
+  els.qcTimer.textContent=Math.max(0,qcState.timeLeft).toFixed(1)+'s';
+  if(qcState.timeLeft<=5) els.qcTimer.classList.add('urgent');
+  else els.qcTimer.classList.remove('urgent');
+}
+
+function handleQcTimeout(){
+  // Time out = 0 score
+  const t=i18n[currentLang];
+  qcState.scores.push({score:0,de:30,timeSpent:qcState.roundTimeLimit});
+  showQcFeedback(-1,30,0);
+}
+
+function handleQcPick(idx){
+  clearInterval(qcState.timer);
+  const chosen=qcState.choices[idx];
+  const targetLab=labFromHsb(qcState.target);
+  const chosenLab=labFromHsb(chosen);
+  const de=ciede2000(chosenLab,targetLab);
+  const score=scoreFromDeltaE(de);
+  qcState.scores.push({score,de,timeSpent:qcState.roundTimeLimit-qcState.timeLeft});
+
+  // Highlight grid
+  const cells=els.qcGrid.querySelectorAll('.qc-cell');
+  cells.forEach((c,i)=>{
+    c.disabled=true;
+    c.onclick=null;
+    if(i===qcState.correctIdx) c.classList.add('correct');
+    else if(i===idx && idx!==qcState.correctIdx) c.classList.add('wrong');
+  });
+
+  // Small delay to show correct/wrong before feedback overlay
+  setTimeout(()=>showQcFeedback(idx,de,score),600);
+}
+
+function showQcFeedback(pickIdx,de,score){
+  qcState.phase='feedback';
+  els.qcSelectPhase.classList.add('hidden');
+  els.qcFeedbackPhase.classList.remove('hidden');
+
+  const t=i18n[currentLang];
+  els.qcFeedbackScore.textContent=score;
+  els.qcFeedbackDe.textContent=`ΔE ${de.toFixed(2)}`;
+  const r=getRating(de);
+  els.qcFeedbackRating.textContent=currentLang==='zh'?r.labelZh:r.label;
+
+  // Color the bubble based on rating (Memphis high saturation)
+  const bubbleColors={
+    pro:'#4ade80',
+    excellent:'#22d3ee',
+    competent:'#facc15',
+    practice:'#fb923c',
+    alert:'#f87171',
+  };
+  els.qcFeedbackBubble.style.background=bubbleColors[r.level]||'#ffd500';
+
+  els.qcFbTarget.style.background=hsbToCss(qcState.target);
+  const pickColor = pickIdx>=0 ? hsbToCss(qcState.choices[pickIdx]) : '#333';
+  els.qcFbPick.style.background=pickColor;
+
+  els.qcNextBtn.onclick=()=>{
+    qcState.round++;
+    if(qcState.round>=5){
+      showQcFinal();
+    }else{
+      startQuickRound();
+    }
+  };
+}
+
+function showQcFinal(){
+  qcState.phase='finished';
+  els.qcFeedbackPhase.classList.add('hidden');
+  els.qcResultModal.classList.remove('hidden');
+
+  const scores=qcState.scores.map(s=>s.score);
+  const des=qcState.scores.map(s=>s.de);
+  const total=scores.reduce((a,b)=>a+b,0);
+  const avgDe=des.reduce((a,b)=>a+b,0)/des.length;
+  const best=Math.max(...scores);
+  const grade=getGrade(total);
+  const rank=getRankFromAvgDe(avgDe);
+
+  els.qcFinalGrade.textContent=grade;
+  els.qcFinalScore.textContent=`${total} / 500`;
+  els.qcFinalDe.textContent=avgDe.toFixed(2);
+  els.qcFinalBest.textContent=best;
+  els.qcFinalRank.textContent=currentLang==='zh'?rank.labelZh:rank.label;
+
+  // Emoji bar
+  const emojiForScore=s=>s>=95?'🟢':s>=80?'🟡':s>=60?'🟠':'🔴';
+  els.qcEmojiBar.textContent=scores.map(emojiForScore).join('');
+}
+
+els.qcStartBtn.addEventListener('click',()=>{
+  qcState.round=0;
+  qcState.scores=[];
+  startQuickRound();
+});
+
+els.qcCloseModal.addEventListener('click',()=>{
+  els.qcResultModal.classList.add('hidden');
+  resetQuickChallenge();
+});
+
+els.qcShareBtn.addEventListener('click',()=>{
+  const scores=qcState.scores.map(s=>s.score);
+  const total=scores.reduce((a,b)=>a+b,0);
+  const best=Math.max(...scores);
+  const grade=getGrade(total);
+  const emojiForScore=s=>s>=95?'🟢':s>=80?'🟡':s>=60?'🟠':'🔴';
+  const bar=scores.map(emojiForScore).join('');
+  const t=i18n[currentLang];
+  const title = currentLang==='zh'?'◐ HueHacker 限时挑战':'◐ HueHacker Quick Challenge';
+  const lines=[
+    title,
+    `${t.score}: ${total}/500  |  Grade: ${grade}`,
+    `${t.qcBestRound}: ${best}`,
+    bar,
+    'https://huehacker.fun'
+  ];
+  const text=lines.join('\n');
+  navigator.clipboard.writeText(text).then(()=>{
+    const orig=els.qcShareBtn.textContent;
+    els.qcShareBtn.textContent='✅ Copied!';
+    setTimeout(()=>els.qcShareBtn.textContent=orig,2000);
+  }).catch(()=>{
+    // Fallback
+    prompt('Copy this summary:',text);
+  });
+});
+
 // ===== 15. Boot =====
 initDaily();
 renderLB(JSON.parse(localStorage.getItem('cm_lb')||'[]'));
 applyLanguage(getBrowserLang());
+
+// Restore saved mode
+const savedMode=localStorage.getItem('hh_mode')||'daily';
+if(savedMode==='quick') switchMode('quick');
+
+els.modeSwitch.querySelectorAll('button').forEach(btn=>{
+  btn.addEventListener('click',()=>{
+    switchMode(btn.dataset.mode);
+    localStorage.setItem('hh_mode',btn.dataset.mode);
+  });
+});
 
 document.querySelectorAll('.lang-switch button').forEach(btn=>{
   btn.addEventListener('click',()=>applyLanguage(btn.dataset.lang));
