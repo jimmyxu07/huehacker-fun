@@ -17,7 +17,7 @@
 <meta name="twitter:description" content="Train your color eye daily · HSB calibration · CIEDE2000 scoring.">
 <meta name="twitter:image" content="https://huehacker.fun/og-image.jpg">
 
-<link rel="stylesheet" href="style.css?v=5">
+<link rel="stylesheet" href="style.css?v=6">
 </head>
 <body>
 <div id="app">
@@ -33,6 +33,7 @@
     <div class="mode-switch" id="mode-switch">
       <button data-mode="daily" class="active" data-i18n="modeDaily">Daily</button>
       <button data-mode="quick" data-i18n="modeQuick">Quick Challenge</button>
+      <button data-mode="classic" data-i18n="modeClassic">Classic</button>
     </div>
 
     <div class="meta">
@@ -163,6 +164,121 @@
       </div>
     </div>
 
+    <!-- ========== CLASSIC MODE ========== -->
+    <div id="classic-panel" class="hidden">
+      <!-- Progress -->
+      <div class="cl-progress">
+        <div class="cl-round-info">
+          <span id="cl-round-label" data-i18n="clRound">Round 1 / 10</span>
+          <span id="cl-bet-label" class="cl-bet-label"></span>
+        </div>
+        <div class="cl-timer-bar-wrap">
+          <div class="cl-timer-bar" id="cl-timer-bar"></div>
+        </div>
+      </div>
+
+      <!-- Start Screen -->
+      <div id="cl-start-screen">
+        <div class="qc-intro">
+          <h3 data-i18n="clTitle">🎨 Classic Mode</h3>
+          <p data-i18n="clDesc">10 rounds. Memorize the color, then recreate it from memory using the Color Wheel. Bet on your confidence.</p>
+          <ul class="qc-rules">
+            <li data-i18n="clRule1">Memorize the target color for 3 seconds</li>
+            <li data-i18n="clRule2">The target becomes a grayscale outline — no copying!</li>
+            <li data-i18n="clRule3">Use the Color Wheel + sliders to recreate the color</li>
+            <li data-i18n="clRule4">Bet Safe ×1.0, Risky ×1.5, or Gamble ×2.0 each round</li>
+          </ul>
+          <button id="cl-start-btn" class="btn-primary" data-i18n="clStart">Start Classic</button>
+        </div>
+      </div>
+
+      <!-- Bet Phase -->
+      <div id="cl-bet-phase" class="hidden">
+        <div class="cl-phase-label" data-i18n="clBetLabel">Choose your bet</div>
+        <div class="cl-bet-grid">
+          <button class="cl-bet-btn" data-bet="safe">
+            <span class="cl-bet-name" data-i18n="clBetSafe">Safe</span>
+            <span class="cl-bet-multi">×1.0</span>
+          </button>
+          <button class="cl-bet-btn" data-bet="risky">
+            <span class="cl-bet-name" data-i18n="clBetRisky">Risky</span>
+            <span class="cl-bet-multi">×1.5</span>
+          </button>
+          <button class="cl-bet-btn" data-bet="gamble">
+            <span class="cl-bet-name" data-i18n="clBetGamble">Gamble</span>
+            <span class="cl-bet-multi">×2.0</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Memorize Phase -->
+      <div id="cl-memorize-phase" class="hidden">
+        <div class="cl-phase-label" data-i18n="clMemorize">Memorize the target color</div>
+        <div class="color-block cl-target-block" id="cl-target-block"></div>
+        <div class="cl-countdown" id="cl-countdown">3</div>
+      </div>
+
+      <!-- Match Phase -->
+      <div id="cl-match-phase" class="hidden">
+        <div class="cl-phase-label" data-i18n="clMatchLabel">Recreate from memory</div>
+        <div class="cl-match-layout">
+          <div class="cl-target-area">
+            <div class="panel-label" data-i18n="targetLabel">TARGET</div>
+            <div class="color-block cl-target-block" id="cl-match-target"></div>
+            <div class="cl-lineart-hint" data-i18n="clLineartHint">Line-art reference</div>
+          </div>
+          <div class="cl-user-area">
+            <div class="panel-label" data-i18n="yoursLabel">YOURS</div>
+            <div class="color-block cl-user-block" id="cl-user-block"></div>
+            <div class="cl-hex" id="cl-hex">#808080</div>
+          </div>
+        </div>
+
+        <div class="cl-wheel-section">
+          <div class="cl-wheel-wrap">
+            <canvas id="cl-wheel" width="280" height="280"></canvas>
+            <div class="cl-wheel-hint" data-i18n="clWheelHint">Ring = Hue · Inner = Saturation × Brightness</div>
+          </div>
+        </div>
+
+        <div class="cl-sliders">
+          <div class="slider-group">
+            <label><span data-i18n="satLabel">Saturation</span> <span id="cl-s-val">50</span>%</label>
+            <input type="range" id="cl-sat" min="0" max="100" value="50">
+            <div class="track sat-track" id="cl-sat-track"></div>
+          </div>
+          <div class="slider-group">
+            <label><span data-i18n="briLabel">Brightness</span> <span id="cl-b-val">50</span>%</label>
+            <input type="range" id="cl-bri" min="0" max="100" value="50">
+            <div class="track bri-track" id="cl-bri-track"></div>
+          </div>
+        </div>
+
+        <button id="cl-submit-btn" class="btn-primary" data-i18n="clSubmit">Submit Color</button>
+      </div>
+
+      <!-- Feedback Phase -->
+      <div id="cl-feedback-phase" class="hidden">
+        <div class="qc-memphis-bubble" id="cl-feedback-bubble">
+          <div class="qc-feedback-score" id="cl-feedback-score">8500</div>
+          <div class="qc-feedback-de" id="cl-feedback-de">ΔE 2.34</div>
+          <div class="cl-feedback-bet" id="cl-feedback-bet">Safe ×1.0</div>
+          <div class="qc-feedback-rating" id="cl-feedback-rating">🏆 Professional</div>
+        </div>
+        <div class="qc-feedback-colors">
+          <div class="qc-feedback-color">
+            <div class="qc-mini-block" id="cl-fb-target"></div>
+            <span data-i18n="targetLabel">Target</span>
+          </div>
+          <div class="qc-feedback-color">
+            <div class="qc-mini-block" id="cl-fb-pick"></div>
+            <span data-i18n="yoursLabel">Yours</span>
+          </div>
+        </div>
+        <button id="cl-next-btn" class="btn-primary" data-i18n="qcNext">Next →</button>
+      </div>
+    </div>
+
     <!-- ========== RESULT MODAL (Daily) ========== -->
     <div id="result-modal" class="modal hidden">
       <div class="modal-content">
@@ -251,6 +367,39 @@
       </div>
     </div>
 
+    <!-- ========== CLASSIC FINAL MODAL (Memphis style) ========== -->
+    <div id="cl-result-modal" class="modal hidden">
+      <div class="modal-content memphis-card">
+        <div class="memphis-burst">
+          <h2 id="cl-final-title">Classic Mode</h2>
+          <div class="cl-final-tier" id="cl-final-tier">🥇 Master</div>
+          <div class="cl-final-score" id="cl-final-score">82,450</div>
+        </div>
+
+        <div class="qc-final-stats">
+          <div class="qc-stat">
+            <span class="qc-stat-label" data-i18n="clAvgDeltaE">Avg ΔE</span>
+            <span class="qc-stat-val" id="cl-final-de">4.12</span>
+          </div>
+          <div class="qc-stat">
+            <span class="qc-stat-label" data-i18n="clBestRound">Best Round</span>
+            <span class="qc-stat-val" id="cl-final-best">9,800</span>
+          </div>
+          <div class="qc-stat">
+            <span class="qc-stat-label" data-i18n="clRank">Rank</span>
+            <span class="qc-stat-val" id="cl-final-rank">Gold</span>
+          </div>
+        </div>
+
+        <div class="qc-emoji-bar" id="cl-emoji-bar">🟢🟢🟡🟢🔴🟢🟡🟢🟢🟡</div>
+
+        <div class="actions">
+          <button id="cl-share-btn" class="btn-primary" data-i18n="clShare">Copy Summary</button>
+          <button id="cl-close-modal" class="btn-ghost" data-i18n="clPlayAgain">Play Again</button>
+        </div>
+      </div>
+    </div>
+
     <!-- Leaderboard -->
     <section class="leaderboard" id="leaderboard-section">
       <h3 data-i18n="leaderboardTitle">◐ Leaderboard</h3>
@@ -265,6 +414,6 @@
 
   <canvas id="share-canvas" width="1200" height="630" style="display:none;"></canvas>
 </div>
-<script src="app.js?v=5"></script>
+<script src="app.js?v=6"></script>
 </body>
 </html>

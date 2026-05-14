@@ -18,7 +18,7 @@ html,body{ margin:0; padding:0; background:var(--bg); color:var(--text); font-fa
 .lang-switch button:hover:not(.active){ border-color:var(--accent2); color:var(--text); }
 
 /* Mode switch */
-.mode-switch{ display:flex; justify-content:center; gap:6px; margin:10px 0 4px; }
+.mode-switch{ display:flex; justify-content:center; gap:6px; margin:10px 0 4px; flex-wrap:wrap; }
 .mode-switch button{ background:transparent; border:1px solid rgba(255,255,255,.12); color:var(--muted); padding:6px 14px; border-radius:999px; font-size:.82rem; cursor:pointer; transition:all .2s; font-weight:500; }
 .mode-switch button.active{ background:var(--accent); border-color:var(--accent); color:#fff; font-weight:600; }
 .mode-switch button:hover:not(.active){ border-color:var(--accent2); color:var(--text); }
@@ -116,6 +116,59 @@ input[type=range]::-webkit-slider-runnable-track{ height:5px; border-radius:999p
 .qc-rules{ text-align:left; color:var(--muted); font-size:.82rem; line-height:1.7; margin:0 0 18px; padding-left:18px; }
 .qc-rules li{ margin-bottom:4px; }
 
+/* ===== CLASSIC MODE ===== */
+#classic-panel{ animation: fadeIn .3s ease; }
+.cl-progress{ margin-bottom:14px; }
+.cl-round-info{ display:flex; justify-content:space-between; align-items:center; font-size:.9rem; margin-bottom:6px; }
+.cl-bet-label{ font-weight:700; color:var(--accent2); font-size:.85rem; }
+.cl-timer-bar-wrap{ height:6px; background:rgba(255,255,255,.08); border-radius:999px; overflow:hidden; }
+.cl-timer-bar{ height:100%; background: linear-gradient(90deg, var(--accent), var(--accent2)); width:100%; transition: width .1s linear; }
+
+.cl-phase-label{ text-align:center; font-size:.9rem; color:var(--muted); margin-bottom:14px; font-weight:500; }
+.cl-target-block{ margin:0 auto 10px; }
+.cl-countdown{ text-align:center; font-size:3rem; font-weight:800; color:var(--accent); font-family:"SF Mono",Monaco,monospace; margin-top:8px; line-height:1; }
+
+/* Bet Phase */
+.cl-bet-grid{ display:grid; grid-template-columns:1fr 1fr 1fr; gap:10px; max-width:360px; margin:0 auto; }
+.cl-bet-btn{ background:var(--card); border:2px solid rgba(255,255,255,.1); border-radius:16px; padding:16px 8px; cursor:pointer; transition:all .2s; display:flex; flex-direction:column; align-items:center; gap:6px; color:var(--text); }
+.cl-bet-btn:hover{ border-color:var(--accent); transform:translateY(-2px); }
+.cl-bet-btn:active{ transform:scale(.97); }
+.cl-bet-btn.selected{ border-color:var(--accent); background:rgba(124,92,255,.12); box-shadow:0 0 0 3px rgba(124,92,255,.2); }
+.cl-bet-name{ font-size:.9rem; font-weight:700; }
+.cl-bet-multi{ font-size:1.1rem; font-weight:800; color:var(--accent2); font-family:"SF Mono",Monaco,monospace; }
+
+/* Match Phase */
+.cl-match-layout{ display:flex; align-items:center; justify-content:center; gap:16px; margin-bottom:14px; }
+.cl-target-area, .cl-user-area{ flex:1; display:flex; flex-direction:column; align-items:center; gap:8px; }
+.cl-target-area .color-block, .cl-user-area .color-block{ width:140px; height:140px; }
+
+.cl-lineart-hint{ font-size:.7rem; color:var(--muted); font-style:italic; }
+.cl-hex{ font-family:"SF Mono",Monaco,monospace; font-size:.85rem; color:var(--accent2); font-weight:700; margin-top:4px; }
+
+/* Grayscale line-art effect */
+.cl-target-block.lineart{
+  filter: grayscale(100%) contrast(120%);
+  opacity:.65;
+  border:3px dashed rgba(255,255,255,.25);
+  box-shadow: inset 0 0 20px rgba(0,0,0,.4);
+}
+.cl-target-block.lineart::before{ box-shadow: inset 0 0 0 2px rgba(255,255,255,.15); }
+.cl-target-block.lineart::after{ border:2px dashed rgba(255,255,255,.2); }
+
+/* Color Wheel */
+.cl-wheel-section{ display:flex; justify-content:center; margin-bottom:14px; }
+.cl-wheel-wrap{ position:relative; display:flex; flex-direction:column; align-items:center; gap:8px; }
+#cl-wheel{ display:block; border-radius:50%; cursor:crosshair; touch-action:none; max-width:280px; width:100%; height:auto; background:transparent; }
+.cl-wheel-hint{ font-size:.72rem; color:var(--muted); text-align:center; }
+
+/* Classic Sliders */
+.cl-sliders{ background:var(--card); border-radius:var(--radius); padding:16px 20px; margin-bottom:14px; }
+.cl-sliders .slider-group{ margin-bottom:12px; }
+.cl-sliders .slider-group:last-child{ margin-bottom:0; }
+
+/* Classic Feedback */
+.cl-feedback-bet{ font-size:.85rem; font-weight:700; color:#000; margin-top:4px; font-family:"SF Mono",Monaco,monospace; }
+
 /* ===== MEMPHIS FINAL CARD ===== */
 .memphis-card{ background:#fff !important; color:#000 !important; border:4px solid #000 !important; border-radius:28px !important; position:relative; overflow:hidden; }
 .memphis-card::before{ content:''; position:absolute; top:-30px; right:-30px; width:100px; height:100px; background:#ff0055; border:3px solid #000; border-radius:50%; z-index:0; }
@@ -133,6 +186,9 @@ input[type=range]::-webkit-slider-runnable-track{ height:5px; border-radius:999p
 .memphis-burst h2{ margin:0 0 8px; color:#000; font-size:1.3rem; }
 .qc-final-grade{ font-size:4rem; font-weight:900; color:#000; line-height:1; }
 .qc-final-score{ font-size:1.1rem; font-weight:800; color:#000; margin-top:6px; }
+
+.cl-final-tier{ font-size:2.6rem; font-weight:900; color:#000; line-height:1; margin-top:4px; }
+.cl-final-score{ font-size:1.4rem; font-weight:800; color:#000; margin-top:8px; font-family:"SF Mono",Monaco,monospace; }
 
 .qc-final-stats{ display:flex; justify-content:space-around; margin-bottom:16px; position:relative; z-index:1; }
 .qc-stat{ display:flex; flex-direction:column; align-items:center; gap:4px; }
@@ -202,4 +258,9 @@ footer .disclaimer{ opacity:.7; font-size:.7rem; margin-top:6px; }
   .qc-grid{ gap:10px; max-width:280px; }
   .memphis-card::before{ width:70px; height:70px; }
   .memphis-card::after{ width:50px; height:50px; }
+  .cl-bet-grid{ gap:8px; }
+  .cl-bet-btn{ padding:14px 6px; }
+  .cl-match-layout{ gap:10px; }
+  .cl-target-area .color-block, .cl-user-area .color-block{ width:120px; height:120px; }
+  .cl-match-layout .panel-label{ font-size:.65rem; }
 }
