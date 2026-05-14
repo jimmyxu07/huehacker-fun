@@ -961,3 +961,562 @@ els.modeSwitch.querySelectorAll('button').forEach(btn=>{
 document.querySelectorAll('.lang-switch button').forEach(btn=>{
   btn.addEventListener('click',()=>applyLanguage(btn.dataset.lang));
 });
+
+// ===== CLASSIC MODE LOGIC =====
+
+// Extend i18n
+Object.assign(i18n.en, {
+  modeClassic:'Classic',
+  clRound:'Round',
+  clTitle:'🎨 Classic Mode',
+  clDesc:'10 rounds. Memorize the color, then recreate it from memory using the Color Wheel. Bet on your confidence.',
+  clRule1:'Memorize the target color for 3 seconds',
+  clRule2:'The target becomes a grayscale outline — no copying!',
+  clRule3:'Use the Color Wheel + sliders to recreate the color',
+  clRule4:'Bet Safe ×1.0, Risky ×1.5, or Gamble ×2.0 each round',
+  clStart:'Start Classic',
+  clBetLabel:'Choose your bet',
+  clBetSafe:'Safe',
+  clBetRisky:'Risky',
+  clBetGamble:'Gamble',
+  clMemorize:'Memorize the target color',
+  clMatchLabel:'Recreate from memory',
+  clLineartHint:'Line-art reference',
+  clWheelHint:'Ring = Hue · Inner = Saturation × Brightness',
+  clSubmit:'Submit Color',
+  clAvgDeltaE:'Avg ΔE',
+  clBestRound:'Best Round',
+  clRank:'Rank',
+  clShare:'Copy Summary',
+  clPlayAgain:'Play Again',
+});
+Object.assign(i18n.zh, {
+  modeClassic:'经典模式',
+  clRound:'第',
+  clTitle:'🎨 经典模式',
+  clDesc:'共 10 轮。先记忆颜色，再用色轮凭记忆还原。根据信心选择投注倍率。',
+  clRule1:'每轮有 3 秒时间记忆目标色',
+  clRule2:'目标色会变成灰度线稿——不能抄！',
+  clRule3:'使用色轮+滑块还原颜色',
+  clRule4:'每轮可选择安全×1.0、冒险×1.5、赌博×2.0',
+  clStart:'开始经典模式',
+  clBetLabel:'选择你的投注',
+  clBetSafe:'安全',
+  clBetRisky:'冒险',
+  clBetGamble:'赌博',
+  clMemorize:'记住目标颜色',
+  clMatchLabel:'凭记忆还原颜色',
+  clLineartHint:'线稿参考',
+  clWheelHint:'外环=色相 · 内区=饱和度×亮度',
+  clSubmit:'提交颜色',
+  clAvgDeltaE:'平均 ΔE',
+  clBestRound:'最佳回合',
+  clRank:'段位',
+  clShare:'复制成绩单',
+  clPlayAgain:'再来一次',
+});
+
+// DOM refs
+const clEls={
+  panel:$('classic-panel'),
+  startScreen:$('cl-start-screen'),
+  startBtn:$('cl-start-btn'),
+  betPhase:$('cl-bet-phase'),
+  betBtns:document.querySelectorAll('.cl-bet-btn'),
+  memorizePhase:$('cl-memorize-phase'),
+  targetBlock:$('cl-target-block'),
+  countdown:$('cl-countdown'),
+  matchPhase:$('cl-match-phase'),
+  matchTarget:$('cl-match-target'),
+  userBlock:$('cl-user-block'),
+  hex:$('cl-hex'),
+  wheel:$('cl-wheel'),
+  satInput:$('cl-sat'),
+  briInput:$('cl-bri'),
+  satVal:$('cl-s-val'),
+  briVal:$('cl-b-val'),
+  satTrack:$('cl-sat-track'),
+  briTrack:$('cl-bri-track'),
+  submitBtn:$('cl-submit-btn'),
+  feedbackPhase:$('cl-feedback-phase'),
+  feedbackBubble:$('cl-feedback-bubble'),
+  feedbackScore:$('cl-feedback-score'),
+  feedbackDe:$('cl-feedback-de'),
+  feedbackBet:$('cl-feedback-bet'),
+  feedbackRating:$('cl-feedback-rating'),
+  nextBtn:$('cl-next-btn'),
+  fbTarget:$('cl-fb-target'),
+  fbPick:$('cl-fb-pick'),
+  resultModal:$('cl-result-modal'),
+  finalTier:$('cl-final-tier'),
+  finalScore:$('cl-final-score'),
+  finalDe:$('cl-final-de'),
+  finalBest:$('cl-final-best'),
+  finalRank:$('cl-final-rank'),
+  emojiBar:$('cl-emoji-bar'),
+  shareBtn:$('cl-share-btn'),
+  closeModal:$('cl-close-modal'),
+  roundLabel:$('cl-round-label'),
+  betLabel:$('cl-bet-label'),
+  timerBar:$('cl-timer-bar'),
+};
+
+const clState={
+  round:0,
+  phase:'idle',
+  scores:[],
+  target:{h:0,s:0,b:0},
+  user:{h:180,s:50,b:50},
+  currentBet:'safe',
+  currentMultiplier:1.0,
+  memorizeTimer:null,
+  isWheelDragging:false,
+};
+
+els.classicPanel=clEls.panel;
+
+// Override switchMode to support classic
+switchMode=function(mode){
+  if(mode===state.mode) return;
+  state.mode=mode;
+  document.querySelectorAll('.mode-switch button').forEach(btn=>{
+    btn.classList.toggle('active', btn.dataset.mode===mode);
+  });
+  if(mode==='daily'){
+    els.dailyPanel.classList.remove('hidden');
+    els.quickPanel.classList.add('hidden');
+    els.classicPanel.classList.add('hidden');
+    els.leaderboardSection.classList.remove('hidden');
+  }else if(mode==='quick'){
+    els.dailyPanel.classList.add('hidden');
+    els.quickPanel.classList.remove('hidden');
+    els.classicPanel.classList.add('hidden');
+    els.leaderboardSection.classList.add('hidden');
+    resetQuickChallenge();
+  }else if(mode==='classic'){
+    els.dailyPanel.classList.add('hidden');
+    els.quickPanel.classList.add('hidden');
+    els.classicPanel.classList.remove('hidden');
+    els.leaderboardSection.classList.add('hidden');
+    resetClassic();
+  }
+  localStorage.setItem('hh_mode',mode);
+};
+
+// Hook applyLanguage
+const _origApplyLanguage=applyLanguage;
+applyLanguage=function(lang){
+  _origApplyLanguage(lang);
+  updateClassicUI();
+};
+
+function resetClassic(){
+  clearInterval(clState.memorizeTimer);
+  clState.round=0;
+  clState.phase='idle';
+  clState.scores=[];
+  clState.target={h:0,s:0,b:0};
+  clState.user={h:180,s:50,b:50};
+  clState.isWheelDragging=false;
+
+  clEls.startScreen.classList.remove('hidden');
+  clEls.betPhase.classList.add('hidden');
+  clEls.memorizePhase.classList.add('hidden');
+  clEls.matchPhase.classList.add('hidden');
+  clEls.feedbackPhase.classList.add('hidden');
+  clEls.resultModal.classList.add('hidden');
+  clEls.betLabel.textContent='';
+  if(clEls.timerBar) clEls.timerBar.style.width='100%';
+  updateClassicUI();
+}
+
+function updateClassicUI(){
+  const t=i18n[currentLang];
+  const displayRound=Math.min(clState.round+1,10);
+  let roundText;
+  if(currentLang==='zh'){
+    roundText=`${t.clRound} ${displayRound} / 10`;
+  }else{
+    roundText=`Round ${displayRound} / 10`;
+  }
+  clEls.roundLabel.textContent=roundText;
+}
+
+function startClassicRound(){
+  clState.phase='bet';
+  clState.target=generateTargetColor();
+  clState.user={h:180,s:50,b:50};
+
+  clEls.startScreen.classList.add('hidden');
+  clEls.betPhase.classList.remove('hidden');
+  clEls.memorizePhase.classList.add('hidden');
+  clEls.matchPhase.classList.add('hidden');
+  clEls.feedbackPhase.classList.add('hidden');
+  clEls.betLabel.textContent='';
+
+  updateClassicUI();
+}
+
+function handleBet(betType){
+  const multipliers={safe:1.0,risky:1.5,gamble:2.0};
+  clState.currentBet=betType;
+  clState.currentMultiplier=multipliers[betType];
+
+  const betNames={safe:'Safe',risky:'Risky',gamble:'Gamble'};
+  clEls.betLabel.textContent=`${betNames[betType]} ×${multipliers[betType]}`;
+
+  clEls.betPhase.classList.add('hidden');
+  enterClassicMemorize();
+}
+
+function enterClassicMemorize(){
+  clState.phase='memorize';
+  clEls.memorizePhase.classList.remove('hidden');
+  clEls.targetBlock.style.background=hsbToCss(clState.target);
+  clEls.countdown.textContent='3';
+
+  let count=3;
+  clearInterval(clState.memorizeTimer);
+  clState.memorizeTimer=setInterval(()=>{
+    count--;
+    if(count>0){
+      clEls.countdown.textContent=count;
+    }else{
+      clearInterval(clState.memorizeTimer);
+      enterClassicMatch();
+    }
+  },1000);
+}
+
+function enterClassicMatch(){
+  clState.phase='match';
+  clEls.memorizePhase.classList.add('hidden');
+  clEls.matchPhase.classList.remove('hidden');
+
+  clEls.matchTarget.style.background=hsbToCss(clState.target);
+  clEls.matchTarget.style.filter='grayscale(100%)';
+  clEls.matchTarget.style.opacity='0.3';
+
+  updateClassicUserColor();
+  drawColorWheel(clEls.wheel, clState.user.h, clState.user.s, clState.user.b);
+}
+
+function updateClassicUserColor(){
+  const {h,s,b}=clState.user;
+  const rgb=hsbToRgb(h,s,b);
+  const css=`rgb(${rgb.r},${rgb.g},${rgb.bl})`;
+  clEls.userBlock.style.background=css;
+  clEls.hex.textContent=rgbToHex(rgb.r,rgb.g,rgb.bl).toUpperCase();
+  clEls.satInput.value=s;
+  clEls.briInput.value=b;
+  clEls.satVal.textContent=s;
+  clEls.briVal.textContent=b;
+
+  const trackRgb=hsbToRgb(h,100,100);
+  const trackCss=`rgb(${trackRgb.r},${trackRgb.g},${trackRgb.bl})`;
+  if(clEls.satTrack){
+    clEls.satTrack.style.background=`linear-gradient(to right, #808080, ${trackCss})`;
+  }
+  if(clEls.briTrack){
+    clEls.briTrack.style.background=`linear-gradient(to right, #000, ${trackCss})`;
+  }
+}
+
+function rgbToHex(r,g,b){
+  return '#' + [r,g,b].map(v=>Math.max(0,Math.min(255,Math.round(v))).toString(16).padStart(2,'0')).join('');
+}
+
+function drawColorWheel(canvas, hue, sat, bri){
+  const ctx=canvas.getContext('2d');
+  const w=canvas.width, h=canvas.height;
+  const cx=w/2, cy=h/2;
+  const outerR=Math.min(w,h)/2-5;
+  const innerR=outerR*0.65;
+
+  ctx.clearRect(0,0,w,h);
+
+  // Outer hue ring
+  const grad=ctx.createConicGradient(-Math.PI/2, cx, cy);
+  for(let i=0;i<=360;i+=10){
+    const rgb=hsbToRgb(i,100,100);
+    grad.addColorStop(i/360, `rgb(${rgb.r},${rgb.g},${rgb.bl})`);
+  }
+  ctx.fillStyle=grad;
+  ctx.beginPath();
+  ctx.arc(cx,cy,outerR,0,Math.PI*2);
+  ctx.arc(cx,cy,innerR,0,Math.PI*2,true);
+  ctx.fill();
+
+  // Inner S×B square
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(cx,cy,innerR,0,Math.PI*2);
+  ctx.clip();
+
+  const baseRgb=hsbToRgb(hue,100,100);
+  ctx.fillStyle=`rgb(${baseRgb.r},${baseRgb.g},${baseRgb.bl})`;
+  ctx.fillRect(cx-innerR, cy-innerR, innerR*2, innerR*2);
+
+  const gradH=ctx.createLinearGradient(cx-innerR, 0, cx+innerR, 0);
+  gradH.addColorStop(0, 'rgba(255,255,255,1)');
+  gradH.addColorStop(1, 'rgba(255,255,255,0)');
+  ctx.fillStyle=gradH;
+  ctx.fillRect(cx-innerR, cy-innerR, innerR*2, innerR*2);
+
+  const gradV=ctx.createLinearGradient(0, cy-innerR, 0, cy+innerR);
+  gradV.addColorStop(0, 'rgba(0,0,0,0)');
+  gradV.addColorStop(1, 'rgba(0,0,0,1)');
+  ctx.fillStyle=gradV;
+  ctx.fillRect(cx-innerR, cy-innerR, innerR*2, innerR*2);
+
+  ctx.restore();
+
+  // Inner border
+  ctx.beginPath();
+  ctx.arc(cx,cy,innerR,0,Math.PI*2);
+  ctx.strokeStyle='rgba(255,255,255,0.3)';
+  ctx.lineWidth=1;
+  ctx.stroke();
+
+  // Crosshair
+  const sx=cx-innerR+(sat/100)*(innerR*2);
+  const sy=cy+innerR-(bri/100)*(innerR*2);
+  ctx.strokeStyle='rgba(255,255,255,0.9)';
+  ctx.lineWidth=2;
+  ctx.beginPath();
+  ctx.moveTo(sx-8, sy); ctx.lineTo(sx+8, sy);
+  ctx.moveTo(sx, sy-8); ctx.lineTo(sx, sy+8);
+  ctx.stroke();
+
+  ctx.beginPath();
+  ctx.arc(sx,sy,3,0,Math.PI*2);
+  ctx.fillStyle='#fff';
+  ctx.fill();
+}
+
+function processWheelInput(clientX, clientY, rect){
+  const x=clientX-rect.left;
+  const y=clientY-rect.top;
+  const w=rect.width, h=rect.height;
+  const cx=w/2, cy=h/2;
+  const dx=x-cx, dy=y-cy;
+  const dist=Math.sqrt(dx*dx+dy*dy);
+  const outerR=Math.min(w,h)/2-5;
+  const innerR=outerR*0.65;
+
+  if(dist>=innerR && dist<=outerR){
+    let angle=Math.atan2(dy,dx)*180/Math.PI;
+    angle=(angle+90+360)%360;
+    clState.user.h=Math.round(angle);
+    updateClassicUserColor();
+    drawColorWheel(clEls.wheel, clState.user.h, clState.user.s, clState.user.b);
+    return true;
+  }else if(dist<innerR){
+    const halfSq=innerR;
+    const left=cx-halfSq, top=cy-halfSq;
+    const relX=x-left;
+    const relY=y-top;
+    let sat=Math.round((relX/(halfSq*2))*100);
+    let bri=Math.round(100-(relY/(halfSq*2))*100);
+    sat=Math.max(0,Math.min(100,sat));
+    bri=Math.max(0,Math.min(100,bri));
+    clState.user.s=sat;
+    clState.user.b=bri;
+    updateClassicUserColor();
+    drawColorWheel(clEls.wheel, clState.user.h, clState.user.s, clState.user.b);
+    return true;
+  }
+  return false;
+}
+
+function handleWheelMouse(e){
+  const rect=clEls.wheel.getBoundingClientRect();
+  processWheelInput(e.clientX, e.clientY, rect);
+}
+function handleWheelTouch(e){
+  e.preventDefault();
+  const rect=clEls.wheel.getBoundingClientRect();
+  const touch=e.touches[0];
+  processWheelInput(touch.clientX, touch.clientY, rect);
+}
+
+clEls.wheel.addEventListener('mousedown', (e)=>{
+  clState.isWheelDragging=true;
+  handleWheelMouse(e);
+});
+document.addEventListener('mousemove', (e)=>{
+  if(!clState.isWheelDragging) return;
+  if(clState.phase!=='match') return;
+  handleWheelMouse(e);
+});
+document.addEventListener('mouseup', ()=>{
+  clState.isWheelDragging=false;
+});
+
+clEls.wheel.addEventListener('touchstart', (e)=>{
+  clState.isWheelDragging=true;
+  handleWheelTouch(e);
+}, {passive:false});
+document.addEventListener('touchmove', (e)=>{
+  if(!clState.isWheelDragging) return;
+  if(clState.phase!=='match') return;
+  handleWheelTouch(e);
+}, {passive:false});
+document.addEventListener('touchend', ()=>{
+  clState.isWheelDragging=false;
+});
+
+// Sliders
+clEls.satInput.addEventListener('input', (e)=>{
+  clState.user.s=+e.target.value;
+  updateClassicUserColor();
+  drawColorWheel(clEls.wheel, clState.user.h, clState.user.s, clState.user.b);
+});
+clEls.briInput.addEventListener('input', (e)=>{
+  clState.user.b=+e.target.value;
+  updateClassicUserColor();
+  drawColorWheel(clEls.wheel, clState.user.h, clState.user.s, clState.user.b);
+});
+
+// Buttons
+clEls.startBtn.addEventListener('click', ()=>{
+  clState.round=0;
+  clState.scores=[];
+  startClassicRound();
+});
+
+clEls.betBtns.forEach(btn=>{
+  btn.addEventListener('click', ()=>handleBet(btn.dataset.bet));
+});
+
+clEls.submitBtn.addEventListener('click', ()=>{
+  if(clState.phase!=='match') return;
+  const targetLab=labFromHsb(clState.target);
+  const userLab=labFromHsb(clState.user);
+  const de=ciede2000(userLab,targetLab);
+  const baseScore=Math.max(0, Math.round(10000*(1-de/50)));
+  const finalScore=Math.round(baseScore*clState.currentMultiplier);
+
+  clState.scores.push({
+    baseScore,
+    finalScore,
+    de,
+    bet:clState.currentBet,
+    multiplier:clState.currentMultiplier,
+    target:{...clState.target},
+    user:{...clState.user}
+  });
+
+  showClassicFeedback(baseScore, finalScore, de);
+});
+
+function showClassicFeedback(baseScore, finalScore, de){
+  clState.phase='feedback';
+  clEls.matchPhase.classList.add('hidden');
+  clEls.feedbackPhase.classList.remove('hidden');
+
+  const r=getRating(de);
+  const label=currentLang==='zh'?r.labelZh:r.label;
+  clEls.feedbackScore.textContent=finalScore;
+  clEls.feedbackDe.textContent=`ΔE ${de.toFixed(2)}`;
+  clEls.feedbackBet.textContent=`${clState.currentBet.charAt(0).toUpperCase()+clState.currentBet.slice(1)} ×${clState.currentMultiplier}`;
+  clEls.feedbackRating.textContent=label;
+
+  const bubbleColors={
+    pro:'#4ade80',
+    excellent:'#22d3ee',
+    competent:'#facc15',
+    practice:'#fb923c',
+    alert:'#f87171',
+  };
+  clEls.feedbackBubble.style.background=bubbleColors[r.level]||'#ffd500';
+
+  clEls.fbTarget.style.background=hsbToCss(clState.target);
+  clEls.fbPick.style.background=hsbToCss(clState.user);
+}
+
+clEls.nextBtn.addEventListener('click', ()=>{
+  clState.round++;
+  if(clState.round>=10){
+    showClassicFinal();
+  }else{
+    startClassicRound();
+  }
+});
+
+function getClassicTier(avgDe){
+  if(avgDe<=5) return {label:'Master',labelZh:'大师',emoji:'🥇'};
+  if(avgDe<=10) return {label:'Diamond',labelZh:'钻石',emoji:'💎'};
+  if(avgDe<=15) return {label:'Platinum',labelZh:'铂金',emoji:'🥈'};
+  if(avgDe<=20) return {label:'Gold',labelZh:'黄金',emoji:'🥉'};
+  if(avgDe<=25) return {label:'Silver',labelZh:'白银',emoji:'🪙'};
+  return {label:'Bronze',labelZh:'青铜',emoji:'🏅'};
+}
+
+function showClassicFinal(){
+  clState.phase='finished';
+  clEls.feedbackPhase.classList.add('hidden');
+  clEls.resultModal.classList.remove('hidden');
+
+  const totalScore=clState.scores.reduce((a,s)=>a+s.finalScore,0);
+  const avgDe=clState.scores.reduce((a,s)=>a+s.de,0)/clState.scores.length;
+  const bestRound=Math.max(...clState.scores.map(s=>s.finalScore));
+  const tier=getClassicTier(avgDe);
+
+  clEls.finalTier.textContent=`${tier.emoji} ${currentLang==='zh'?tier.labelZh:tier.label}`;
+  clEls.finalScore.textContent=totalScore.toLocaleString();
+  clEls.finalDe.textContent=avgDe.toFixed(2);
+  clEls.finalBest.textContent=bestRound.toLocaleString();
+  clEls.finalRank.textContent=currentLang==='zh'?tier.labelZh:tier.label;
+
+  const emojiForScore=s=>{
+    if(s.de<=2) return '🟢';
+    if(s.de<=5) return '🟡';
+    if(s.de<=10) return '🟠';
+    return '🔴';
+  };
+  clEls.emojiBar.textContent=clState.scores.map(emojiForScore).join('');
+}
+
+clEls.shareBtn.addEventListener('click', ()=>{
+  const totalScore=clState.scores.reduce((a,s)=>a+s.finalScore,0);
+  const avgDe=clState.scores.reduce((a,s)=>a+s.de,0)/clState.scores.length;
+  const bestRound=Math.max(...clState.scores.map(s=>s.finalScore));
+  const tier=getClassicTier(avgDe);
+
+  const emojiForScore=s=>{
+    if(s.de<=2) return '🟢';
+    if(s.de<=5) return '🟡';
+    if(s.de<=10) return '🟠';
+    return '🔴';
+  };
+  const bar=clState.scores.map(emojiForScore).join('');
+  const title=currentLang==='zh'?'◐ HueHacker 经典模式':'◐ HueHacker Classic Mode';
+  const lines=[
+    title,
+    `Score: ${totalScore.toLocaleString()}  |  Avg ΔE: ${avgDe.toFixed(2)}`,
+    `Best Round: ${bestRound.toLocaleString()}  |  Rank: ${currentLang==='zh'?tier.labelZh:tier.label}`,
+    bar,
+    'https://huehacker.fun'
+  ];
+  const text=lines.join('\n');
+  navigator.clipboard.writeText(text).then(()=>{
+    const orig=clEls.shareBtn.textContent;
+    clEls.shareBtn.textContent='✅ Copied!';
+    setTimeout(()=>clEls.shareBtn.textContent=orig,2000);
+  }).catch(()=>{
+    prompt('Copy this summary:',text);
+  });
+});
+
+clEls.closeModal.addEventListener('click', ()=>{
+  clEls.resultModal.classList.add('hidden');
+  resetClassic();
+});
+
+// If saved mode is classic, switch now that our override supports it
+if(localStorage.getItem('hh_mode')==='classic'){
+  switchMode('classic');
+}
+
+applyLanguage(currentLang);
