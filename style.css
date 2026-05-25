@@ -63,9 +63,43 @@ h1{ margin:0; font-size:1.5rem; font-weight:700; letter-spacing:-0.02em; }
 .controls{ background:var(--card); border-radius:var(--radius); padding:20px; }
 .slider-group{ margin-bottom:16px; position:relative; }
 .slider-group label{ display:flex; justify-content:space-between; font-size:.82rem; color:var(--muted); margin-bottom:8px; font-weight:500; }
-input[type=range]{ -webkit-appearance:none; width:100%; height:32px; background:transparent; position:relative; z-index:2; margin:0; }
+/* ===== TOUCH & TABLET OPTIMIZATIONS ===== */
+input[type=range]{ -webkit-appearance:none; -moz-appearance:none; appearance:none; width:100%; height:32px; background:transparent; position:relative; z-index:2; margin:0; }
 input[type=range]::-webkit-slider-thumb{ -webkit-appearance:none; width:22px; height:22px; border-radius:50%; background:#fff; box-shadow:0 2px 10px rgba(0,0,0,.5); border:2px solid rgba(0,0,0,.08); margin-top:-9px; cursor:pointer; }
+input[type=range]::-moz-range-thumb{ width:22px; height:22px; border-radius:50%; background:#fff; box-shadow:0 2px 10px rgba(0,0,0,.5); border:2px solid rgba(0,0,0,.08); cursor:pointer; }
 input[type=range]::-webkit-slider-runnable-track{ height:5px; border-radius:999px; }
+input[type=range]::-moz-range-track{ height:5px; border-radius:999px; }
+
+/* Larger touch targets on tablets and touch devices */
+@media (hover: none) and (pointer: coarse) {
+  input[type=range]{ height:40px; }
+  input[type=range]::-webkit-slider-thumb{ width:28px; height:28px; margin-top:-12px; }
+  input[type=range]::-moz-range-thumb{ width:28px; height:28px; }
+  .track{ bottom:11px; }
+  .lang-switch button{ padding:6px 14px; font-size:.85rem; }
+  .mode-switch button{ padding:8px 18px; font-size:.9rem; }
+  .qc-cell{ border-width:3px; }
+  .cl-bet-btn{ padding:18px 8px; }
+}
+
+/* Tablet layout adjustments (481px - 900px) */
+@media (min-width: 481px) and (max-width: 900px) {
+  .color-block{ width:200px; height:200px; }
+  .qc-grid{ max-width:360px; gap:14px; }
+  .cl-target-area .color-block, .cl-user-area .color-block{ width:160px; height:160px; }
+}
+
+/* Remove sticky hover states on touch devices */
+@media (hover: none) {
+  .lang-switch button:hover:not(.active){ border-color:rgba(255,255,255,.12); color:var(--muted); }
+  .mode-switch button:hover:not(.active){ border-color:rgba(255,255,255,.12); color:var(--muted); }
+  .qc-cell:hover{ transform:none; border-color:rgba(255,255,255,.06); }
+  .cl-bet-btn:hover{ border-color:rgba(255,255,255,.1); transform:none; }
+  .btn-ghost:hover{ background:rgba(255,255,255,.08); border-color:rgba(255,255,255,.25); }
+}
+
+/* Touch-action for buttons to prevent double-tap zoom */
+button, .qc-cell, .cl-bet-btn{ touch-action: manipulation; }
 .track{ position:absolute; left:0; right:0; bottom:9px; height:5px; border-radius:999px; pointer-events:none; }
 .hue-track{ background: linear-gradient(to right, #f00,#ff0,#0f0,#0ff,#00f,#f0f,#f00); }
 .sat-track{ background: linear-gradient(to right, #555, var(--sat-color, #0ff)); }
