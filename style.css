@@ -298,3 +298,53 @@ footer .disclaimer{ opacity:.7; font-size:.7rem; margin-top:6px; }
   .cl-target-area .color-block, .cl-user-area .color-block{ width:120px; height:120px; }
   .cl-match-layout .panel-label{ font-size:.65rem; }
 }
+
+/* ===== ADSTERRA AD UNITS ===== */
+.ad-banner,
+.ad-native {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.ad-native {
+  margin: 16px 0;
+  min-height: 120px;
+}
+
+/* 728x90 - hidden on mobile, full-width banner on desktop */
+.ad-728x90 {
+  display: none;
+  margin: 12px 0;
+}
+
+/* 300x250 - hidden on mobile */
+.ad-300x250 {
+  display: none;
+  margin: 16px 0;
+}
+
+/* 320x50 - shown on mobile, hidden on desktop */
+.ad-320x50 {
+  display: flex;
+  margin: 12px 0;
+}
+
+@media (min-width: 768px) {
+  .ad-728x90 {
+    display: flex;
+    width: 100vw;
+    position: relative;
+    left: 50%;
+    right: 50%;
+    margin-left: -50vw;
+    margin-right: -50vw;
+    padding: 8px 0;
+  }
+  .ad-300x250 {
+    display: flex;
+  }
+  .ad-320x50 {
+    display: none;
+  }
+}
