@@ -298,3 +298,98 @@ footer .disclaimer{ opacity:.7; font-size:.7rem; margin-top:6px; }
   .cl-target-area .color-block, .cl-user-area .color-block{ width:120px; height:120px; }
   .cl-match-layout .panel-label{ font-size:.65rem; }
 }
+
+/* ===== COOKIE CONSENT BANNER ===== */
+.cookie-banner {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 100;
+  background: var(--card);
+  border-top: 1px solid rgba(255,255,255,.08);
+  padding: 16px;
+}
+.cookie-banner-inner {
+  max-width: 560px;
+  margin: 0 auto;
+  text-align: center;
+}
+.cookie-banner-inner p {
+  margin: 0 0 12px;
+  color: var(--muted);
+  font-size: .85rem;
+  line-height: 1.5;
+}
+.cookie-actions {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+.cookie-actions a {
+  color: var(--accent2);
+  font-size: .82rem;
+  text-decoration: none;
+}
+.cookie-actions a:hover {
+  text-decoration: underline;
+}
+.cookie-actions .btn-primary,
+.cookie-actions .btn-ghost {
+  width: auto;
+  padding: 8px 16px;
+  font-size: .82rem;
+  margin: 0;
+}
+
+/* ===== ADSTERRA AD UNITS ===== */
+.ad-banner,
+.ad-native {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.ad-native {
+  margin: 16px 0;
+  min-height: 120px;
+}
+
+/* 728x90 - hidden on mobile, full-width banner on desktop */
+.ad-728x90 {
+  display: none;
+  margin: 12px 0;
+}
+
+/* 300x250 - hidden on mobile */
+.ad-300x250 {
+  display: none;
+  margin: 16px 0;
+}
+
+/* 320x50 - shown on mobile, hidden on desktop */
+.ad-320x50 {
+  display: flex;
+  margin: 12px 0;
+}
+
+@media (min-width: 768px) {
+  .ad-728x90 {
+    display: flex;
+    width: 100vw;
+    position: relative;
+    left: 50%;
+    right: 50%;
+    margin-left: -50vw;
+    margin-right: -50vw;
+    padding: 8px 0;
+  }
+  .ad-300x250 {
+    display: flex;
+  }
+  .ad-320x50 {
+    display: none;
+  }
+}
